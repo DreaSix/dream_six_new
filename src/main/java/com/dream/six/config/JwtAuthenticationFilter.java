@@ -65,14 +65,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
 
-    private int countOccurrences(String text, char target) {
-        int count = 0;
-        for (char c : text.toCharArray()) {
-            if (c == target) {
-                count++;
-            }
-        }
-        return count;
-    }
+
 
 }

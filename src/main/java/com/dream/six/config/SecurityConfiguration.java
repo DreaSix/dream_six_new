@@ -1,7 +1,6 @@
 package com.dream.six.config;
 
 import com.dream.six.repository.UserInfoRepository;
-import com.dream.six.service.impl.UserPermissionServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -39,8 +38,7 @@ public class SecurityConfiguration {
     private UserInfoRepository userInfoRepository;
     @Autowired
     private LogoutHandler logoutHandler;
-    @Autowired
-    private UserPermissionServiceImpl userPermissionServiceImpl;
+
     @Value("${app.white.list.urls}")
     private String[] whiteListUrls;
 
@@ -50,20 +48,12 @@ public class SecurityConfiguration {
         .httpBasic(withDefaults())
         .formLogin(AbstractHttpConfigurer::disable)
         .cors(withDefaults())
-        .authorizeHttpRequests(
-            auth ->
-                auth.requestMatchers(whiteListUrls)
-                    .permitAll()
-                    // .anyRequest().authenticated()).authenticationProvider(authenticationProvider())
-                    .requestMatchers(
-                        request -> {
-                          boolean flag =
-                              userPermissionServiceImpl.hasPermission(
-                                  SecurityContextHolder.getContext().getAuthentication(),
-                                  request.getServletPath());
-                          return flag;
-                        })
-                    .authenticated())
+            .authorizeHttpRequests(auth ->
+                    auth.requestMatchers(whiteListUrls)
+                            .permitAll()
+                            .requestMatchers(request -> true)
+                            .authenticated()
+            )
         .sessionManagement(
             sessionManagement ->
                 sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
