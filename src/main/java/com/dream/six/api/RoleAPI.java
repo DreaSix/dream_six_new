@@ -135,46 +135,5 @@ public class RoleAPI {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping(value = "/exists-permission", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ApiResponse<Boolean>> checkPermissionExistenceByPermissionName(@RequestParam("permission-name") String permissionName) {
-        log.info("Checking existence of Permission with name: {}", permissionName);
-
-        Boolean isPermissionExist = roleService.existsPermissionByPermissionName(permissionName);
-
-        String message;
-        if (Boolean.TRUE.equals(isPermissionExist)) {
-            message = String.format("Permission with name '%s' exists", permissionName);
-        } else {
-            message = String.format("Permission with name '%s' does not exist", permissionName);
-        }
-
-        ApiResponse<Boolean> response = ApiResponse.<Boolean>builder()
-                .data(isPermissionExist)
-                .message(message)
-                .build();
-
-        log.info(message);
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ApiResponse<String>> importRolesFromCSV(@RequestParam("file") MultipartFile file) throws IOException {
-        log.info("Received request to import roles from CSV.");
-        log.info("File details: {}", file.getOriginalFilename());
-        roleService.saveRolesFromCSV(file);
-        log.info("Roles imported successfully.");
-        ApiResponse<String> response = ApiResponse.<String>builder()
-                .data(ApiResponseMessages.ROLES_IMPORTED_SUCCESSFULLY)
-                .message(ApiResponseMessages.ROLES_IMPORTED_SUCCESSFULLY)
-                .build();
-
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping(value = "/export")
-    public void exportRolePermissionToCsv(HttpServletResponse response,
-                                          @RequestParam UUID roleId) throws IOException {
-        roleService.exportRolePermissionToCsv(response, roleId);
-    }
 
 }

@@ -12,6 +12,5 @@ public class RoleResponseVO {
     private String roleName;
     private String createdAt;
     private String updatedAt;
-    List<PermissionsResponseVO> permissions;
 
 }

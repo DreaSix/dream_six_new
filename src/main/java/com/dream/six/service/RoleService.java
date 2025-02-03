@@ -25,11 +25,7 @@ public interface RoleService {
 
     ApiPageResponse<List<RoleResponseVO>> getAllRoles(int pageNumber, int pageSize);
 
-    void savePermission(PermissionsRequestVO request);
 
-    ApiPageResponse<Map<String,List<PermissionsResponseVO>>> getAllPermissions(String featureName, int pageNumber, int pageSize);
-
-    void deletePermission(UUID permissionId);
 
     RoleResponseVO updateRole(UUID roleId, RoleRequestVO roleRequestVO);
 
@@ -39,21 +35,10 @@ public interface RoleService {
 
     RoleResponseVO getRoleByName(String roleName);
 
-    PermissionsResponseVO updatePermission(UUID permissionId, UpdatePermissionRequestVO request);
-
-    List<String> getFeatureNames();
 
     Boolean existsRoleByRoleName(String roleName);
 
-    Boolean existsPermissionByPermissionName(String permissionName);
-
-    Set<PermissionsResponseVO> getAllPermissionsByUserId(UUID id);
-
-    void saveRolesFromCSV(MultipartFile file) throws IOException;
-
-    void savePermissionsFromCSV(MultipartFile file);
 
     List<RoleResponseVO> findByListOfNamesAndIsDeletedFalse(List<String> roleNames);
 
-    void exportRolePermissionToCsv(HttpServletResponse response, UUID roleId) throws IOException;
 }

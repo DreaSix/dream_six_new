@@ -1,15 +1,14 @@
 package com.dream.six.service.impl;
 
 import com.dream.six.config.JwtService;
-import com.dream.six.entity.TokenEntity;
 import com.dream.six.entity.UserAuthEntity;
 import com.dream.six.entity.UserInfoEntity;
 import com.dream.six.enums.TokenType;
+import com.dream.six.repository.TokenRepository;
 import com.dream.six.utils.PasswordUtils;
 import com.dream.six.constants.ErrorMessageConstants;
 import com.dream.six.exception.InvalidPasswordException;
 import com.dream.six.exception.ResourceNotFoundException;
-import com.dream.six.repository.TokenRepository;
 import com.dream.six.repository.UserAuthRepository;
 import com.dream.six.service.LoginService;
 import com.dream.six.service.RoleService;
@@ -32,7 +31,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
-import static com.dream.six.entity.TokenEntity.*;
 
 @Service
 @Transactional
@@ -81,9 +79,6 @@ public class LoginServiceImpl implements LoginService {
         var jwtToken = jwtService.generateToken(userAuth.getUserInfo());
         var refreshToken = jwtService.generateRefreshToken(userAuth.getUserInfo());
 
-        this.revokeAllUserTokens(userAuth.getUserInfo());
-
-        saveUserToken(userAuth.getUserInfo(), jwtToken);
 
         List<RoleDetail> roles = userAuth.getUserInfo().getRoles().stream().map(role -> {
                     RoleDetail roleDetail = new RoleDetail();
@@ -93,9 +88,8 @@ public class LoginServiceImpl implements LoginService {
                 })
                 .toList();
 
-        Set<PermissionsResponseVO> permissionsResponseVOS = roleService.getAllPermissionsByUserId(userAuth.getUserId());
 
-        return new JwtResponseVO(jwtToken, refreshToken, userAuth.getUserInfo().getUsername(), userAuth.getUserInfo().getId(), roles, permissionsResponseVOS);
+        return new JwtResponseVO(jwtToken, refreshToken, userAuth.getUserInfo().getUsername(), userAuth.getUserInfo().getId(), roles);
     }
 
     @Override
@@ -126,25 +120,5 @@ public class LoginServiceImpl implements LoginService {
         }
     }
 
-    private void saveUserToken(UserInfoEntity user, String jwtToken) {
-        TokenEntity token = new TokenEntity();
-        token.setJwtToken(jwtToken);
-        token.setUserInfo(user);
-        token.setExpired(false);
-        token.setRevoked(false);
-        token.setTokenType(TokenType.BEARER);
-        tokenRepository.save(token);
-    }
-
-    private void revokeAllUserTokens(UserInfoEntity user) {
-        var validUserTokens = tokenRepository.findAllValidTokenByUser(user.getId());
-        if (validUserTokens.isEmpty())
-            return;
-        validUserTokens.forEach(token -> {
-            token.setExpired(true);
-            token.setRevoked(true);
-        });
-        tokenRepository.saveAll(validUserTokens);
-    }
 
 }

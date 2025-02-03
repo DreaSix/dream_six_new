@@ -18,17 +18,15 @@ public class JwtResponseVO {
     private String username;
     private UUID userId;
     private List<RoleDetail> roles;
-    Set<PermissionsResponseVO> permissionsResponseVOS;
 
     private String refreshToken;
 
-    public JwtResponseVO(String accessToken, String refreshToken, String username,UUID userId, List<RoleDetail> roles,Set<PermissionsResponseVO> permissionsResponseVOS) {
+    public JwtResponseVO(String accessToken, String refreshToken, String username,UUID userId, List<RoleDetail> roles) {
         this.accessToken = accessToken;
         this.username = username;
         this.userId = userId;
         this.roles = roles;
         this.refreshToken = refreshToken;
-        this.permissionsResponseVOS = permissionsResponseVOS;
     }
 }
 

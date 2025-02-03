@@ -30,9 +30,6 @@ public interface CommonMapper {
     @Mapping(target = "roles", ignore = true)
     UserInfoEntity convertUserRequestToUserInfoEntity(UserRequestVO request);
 
-    @Mapping(target = "createdAt", expression = "java(permission.getCreatedAt() != null ? convertDate(permission.getCreatedAt()) : null)")
-    @Mapping(target = "updatedAt", expression = "java(permission.getUpdatedAt() != null ? convertDate(permission.getUpdatedAt()) : null)")
-    PermissionsResponseVO convertPermissionEntityToRsponse(PermissionEntity permission);
 
 
     default List<RoleDetail> mapRoles(List<RoleEntity> roleEntities) {
