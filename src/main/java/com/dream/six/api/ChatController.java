@@ -34,13 +34,10 @@ public class ChatController {
         String username = MDC.get("username"); // Retrieve username from context
 
         try {
-            // Call service to save the message and get the updated BidResponseDTO
             BidResponseDTO updatedBidResponse = messageService.saveMessage(request.getBidId(), username, request.getMessageContent());
 
-            // Send the updated bid response to the public chatroom
             simpMessagingTemplate.convertAndSend("/chatroom/public", updatedBidResponse);
         } catch (RuntimeException e) {
-            // Handle errors properly
             BidResponseDTO errorResponse = new BidResponseDTO();
             simpMessagingTemplate.convertAndSend("/chatroom/public", errorResponse);
         }
@@ -52,7 +49,6 @@ public class ChatController {
         simpMessagingTemplate.convertAndSend("/chatroom/public", response);
     }
 
-    // DTO for WebSocket message requests
     @Setter
     @Getter
     public static class BidMessageRequest {
