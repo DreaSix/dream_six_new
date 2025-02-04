@@ -29,7 +29,8 @@ public class WithdrawRequestServiceImpl implements WithdrawRequestService {
         entity.setAccountNumber(requestDTO.getAccountNumber());
         entity.setIfscCode(requestDTO.getIfscCode());
         entity.setCreatedBy(String.valueOf(MDC.get(Constants.USERNAME_ATTRIBUTE)));
-
+        String userUUIDString = org.slf4j.MDC.get(Constants.USER_UUID_ATTRIBUTE);
+            entity.setCreatedByUUID(UUID.fromString(userUUIDString));
         WithdrawBankEntity savedEntity = withdrawRequestRepository.save(entity);
 
         return mapToResponseDTO(savedEntity);
@@ -43,11 +44,20 @@ public class WithdrawRequestServiceImpl implements WithdrawRequestService {
     }
 
     @Override
+    public List<WithdrawBankResponseDTO> getWithdrawBanksBYUser() {
+        String userUUIDString = org.slf4j.MDC.get(Constants.USER_UUID_ATTRIBUTE);
+
+        return withdrawRequestRepository.findByCreatedByUUID(UUID.fromString(userUUIDString))
+                .stream()
+                .map(this::mapToResponseDTO)
+                .toList();    }
+
+    @Override
     public List<WithdrawBankResponseDTO> getAllWithdrawRequests() {
         return withdrawRequestRepository.findAll()
                 .stream()
                 .map(this::mapToResponseDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

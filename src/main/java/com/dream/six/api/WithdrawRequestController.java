@@ -62,6 +62,20 @@ public class WithdrawRequestController {
 
         return ResponseEntity.ok(apiResponse);
     }
+    @GetMapping("/get-by-user")
+    public ResponseEntity<ApiResponse<List<WithdrawBankResponseDTO>>> getAllWithdrawByUser() {
+        log.info("Received request to fetch all withdraw requests");
+        List<WithdrawBankResponseDTO> responseDTOs = withdrawRequestService.getWithdrawBanksBYUser();
+        log.info("All withdraw requests fetched successfully");
+
+        ApiResponse<List<WithdrawBankResponseDTO>> apiResponse = ApiResponse.<List<WithdrawBankResponseDTO>>builder()
+                .data(responseDTOs)
+                .message(ApiResponseMessages.ALL_WITHDRAW_REQUESTS_FETCHED_SUCCESSFULLY)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteWithdrawRequest(@PathVariable UUID id) {

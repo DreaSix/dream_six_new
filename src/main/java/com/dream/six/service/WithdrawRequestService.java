@@ -12,6 +12,8 @@ public interface WithdrawRequestService {
 
     WithdrawBankResponseDTO getWithdrawRequestById(UUID id);
 
+    List<WithdrawBankResponseDTO> getWithdrawBanksBYUser();
+
     List<WithdrawBankResponseDTO> getAllWithdrawRequests();
 
     void deleteWithdrawRequest(UUID id);

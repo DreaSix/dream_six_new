@@ -56,7 +56,13 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setPayment(payment);
         transaction.setTransactionType(requestDTO.getTransactionType());
         transaction.setApprovalStatus(Status.PENDING);
-        transaction.setCreatedByUUID(UUID.fromString(MDC.get(Constants.USER_UUID_ATTRIBUTE)));
+        String userUUIDString = MDC.get(Constants.USER_UUID_ATTRIBUTE);
+        if (userUUIDString != null && !userUUIDString.isEmpty()) {
+            transaction.setCreatedByUUID(UUID.fromString(userUUIDString));
+        } else {
+            log.error("User UUID is missing in MDC");
+            throw new IllegalArgumentException("User UUID is missing in MDC");
+        }
         transaction.setCreatedBy(MDC.get(Constants.USERNAME_ATTRIBUTE));
 
         Transaction savedTransaction = transactionRepository.save(transaction);
@@ -190,6 +196,14 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setTransactionType(TransactionType.WITHDRAW);
         transaction.setApprovalStatus(Status.PENDING); // Default status
         transaction.setWithdrawBank(withdrawBank);
+        String userUUIDString = MDC.get(Constants.USER_UUID_ATTRIBUTE);
+        if (userUUIDString != null && !userUUIDString.isEmpty()) {
+            transaction.setCreatedByUUID(UUID.fromString(userUUIDString));
+        } else {
+            log.error("User UUID is missing in MDC");
+            throw new IllegalArgumentException("User UUID is missing in MDC");
+        }
+        transaction.setCreatedBy(MDC.get(Constants.USERNAME_ATTRIBUTE));
 
         transactionRepository.save(transaction);
 
