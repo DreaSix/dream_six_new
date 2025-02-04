@@ -175,7 +175,7 @@ public class TransactionController {
             @ModelAttribute UpdateTransactionDTO updateTransactionDTO) throws IOException {
         log.info("Updating transaction with ID: {}", updateTransactionDTO.getTransactionId());
 
-        TransactionResponseDTO updatedTransaction = transactionService.updateTransaction(updateTransactionDTO);
+        TransactionResponseDTO updatedTransaction = transactionService.updateWithdrawTransaction(updateTransactionDTO);
         log.info("Transaction updated successfully with ID: {}", updatedTransaction.getId());
 
         ApiResponse<TransactionResponseDTO> apiResponse = ApiResponse.<TransactionResponseDTO>builder()

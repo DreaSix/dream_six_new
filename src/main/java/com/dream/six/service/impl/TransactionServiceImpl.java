@@ -5,11 +5,13 @@ import com.amazonaws.services.glue.model.EntityNotFoundException;
 import com.dream.six.constants.Constants;
 import com.dream.six.entity.Payment;
 import com.dream.six.entity.Transaction;
+import com.dream.six.entity.WalletEntity;
 import com.dream.six.entity.WithdrawBankEntity;
 import com.dream.six.enums.Status;
 import com.dream.six.enums.TransactionType;
 import com.dream.six.repository.PaymentRepository;
 import com.dream.six.repository.TransactionRepository;
+import com.dream.six.repository.WalletRepository;
 import com.dream.six.repository.WithdrawRequestRepository;
 import com.dream.six.service.TransactionService;
 import com.dream.six.vo.ApiPageResponse;
@@ -24,6 +26,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,6 +40,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final TransactionRepository transactionRepository;
     private final PaymentRepository paymentRepository;
     private final WithdrawRequestRepository withdrawRequestRepository;
+    private final WalletRepository walletRepository;
 
     @Override
     public TransactionResponseDTO createTransaction(TransactionRequestDTO requestDTO) throws IOException {
@@ -52,10 +56,17 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setPayment(payment);
         transaction.setTransactionType(requestDTO.getTransactionType());
         transaction.setApprovalStatus(Status.PENDING);
-        transaction.setCreatedByUUID(UUID.fromString(MDC.get(Constants.USER_UUID_ATTRIBUTE)));
+        String userUUIDString = MDC.get(Constants.USER_UUID_ATTRIBUTE);
+        if (userUUIDString != null && !userUUIDString.isEmpty()) {
+            transaction.setCreatedByUUID(UUID.fromString(userUUIDString));
+        } else {
+            log.error("User UUID is missing in MDC");
+            throw new IllegalArgumentException("User UUID is missing in MDC");
+        }
         transaction.setCreatedBy(MDC.get(Constants.USERNAME_ATTRIBUTE));
 
         Transaction savedTransaction = transactionRepository.save(transaction);
+
 
         return mapper.convertEntityToTransactionResponseDTO(savedTransaction);
     }
@@ -146,7 +157,21 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setApprovalStatus(approvalStatus);
 
         Transaction updatedTransaction = transactionRepository.save(transaction);
+        UUID userUUID;
+        try {
+            userUUID = UUID.fromString(MDC.get(Constants.USER_UUID_ATTRIBUTE));
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new RuntimeException("Invalid UUID format in MDC: " + MDC.get(Constants.USER_UUID_ATTRIBUTE), e);
+        }
 
+        WalletEntity walletEntity = walletRepository.findByCreatedByUUID(userUUID)
+                .orElseThrow(() -> new RuntimeException("Wallet not found for user UUID: " + userUUID));
+        BigDecimal newBalance = walletEntity.getBalance().add(BigDecimal.valueOf(transaction.getAmount()));
+        if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new RuntimeException("Insufficient balance");
+        }
+        walletEntity.setBalance(newBalance);
+        walletRepository.save(walletEntity);
         return mapper.convertEntityToTransactionResponseDTO(updatedTransaction);
     }
 
@@ -171,20 +196,44 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setTransactionType(TransactionType.WITHDRAW);
         transaction.setApprovalStatus(Status.PENDING); // Default status
         transaction.setWithdrawBank(withdrawBank);
+        String userUUIDString = MDC.get(Constants.USER_UUID_ATTRIBUTE);
+        if (userUUIDString != null && !userUUIDString.isEmpty()) {
+            transaction.setCreatedByUUID(UUID.fromString(userUUIDString));
+        } else {
+            log.error("User UUID is missing in MDC");
+            throw new IllegalArgumentException("User UUID is missing in MDC");
+        }
+        transaction.setCreatedBy(MDC.get(Constants.USERNAME_ATTRIBUTE));
 
         transactionRepository.save(transaction);
 
     }
 
     @Override
-    public TransactionResponseDTO updateTransaction(UpdateTransactionDTO updateTransactionDTO) throws IOException {
+    public TransactionResponseDTO updateWithdrawTransaction(UpdateTransactionDTO updateTransactionDTO) throws IOException {
         Transaction transaction = transactionRepository.findById(updateTransactionDTO.getTransactionId())
                 .orElseThrow(() -> new EntityNotFoundException("Transaction not found"));
 
         transaction.setTransactionImage(updateTransactionDTO.getTransactionImage().getBytes());
         transaction.setApprovalStatus(updateTransactionDTO.getApprovalStatus());
 
+        UUID userUUID;
+        try {
+            userUUID = UUID.fromString(MDC.get(Constants.USER_UUID_ATTRIBUTE));
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new RuntimeException("Invalid UUID format in MDC: " + MDC.get(Constants.USER_UUID_ATTRIBUTE), e);
+        }
+
+        WalletEntity walletEntity = walletRepository.findByCreatedByUUID(userUUID)
+                .orElseThrow(() -> new RuntimeException("Wallet not found for user UUID: " + userUUID));
+        BigDecimal newBalance = walletEntity.getBalance().subtract(BigDecimal.valueOf(transaction.getAmount()));
+        if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new RuntimeException("Insufficient balance");
+        }
+        walletEntity.setBalance(newBalance);
+        walletRepository.save(walletEntity);
         Transaction updatedTransaction = transactionRepository.save(transaction);
+
         return mapper.convertEntityToTransactionResponseDTO(updatedTransaction);
     }
 }

@@ -46,6 +46,8 @@ public class UserInfoEntity extends BaseEntity implements UserDetails {
     @JsonIgnoreProperties("userInfo")
     private UserAuthEntity userAuthEntity;
 
+
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<String> roleNames = roles.stream().map(RoleEntity::getName).toList();

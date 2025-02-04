@@ -1,7 +1,6 @@
 package com.dream.six.service;
 
 
-import com.amazonaws.services.codepipeline.model.ApprovalStatus;
 import com.dream.six.enums.Status;
 import com.dream.six.enums.TransactionType;
 import com.dream.six.vo.ApiPageResponse;
@@ -32,7 +31,7 @@ public interface TransactionService {
     List<TransactionResponseDTO> getTransactionsByType(TransactionType transactionType);
 
     void createWithdrawRequest(CreateWithdrawRequestDTO requestDTO);
-    TransactionResponseDTO updateTransaction(UpdateTransactionDTO updateTransactionDTO) throws IOException;
+    TransactionResponseDTO updateWithdrawTransaction(UpdateTransactionDTO updateTransactionDTO) throws IOException;
 
 
     }

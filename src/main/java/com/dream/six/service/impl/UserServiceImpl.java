@@ -5,6 +5,7 @@ import com.dream.six.constants.ErrorMessageConstants;
 import com.dream.six.entity.RoleEntity;
 import com.dream.six.entity.UserAuthEntity;
 import com.dream.six.entity.UserInfoEntity;
+import com.dream.six.entity.WalletEntity;
 import com.dream.six.enums.RoleEnum;
 import com.dream.six.exception.InvalidInputException;
 import com.dream.six.exception.ResourceNotFoundException;
@@ -12,6 +13,7 @@ import com.dream.six.exception.UserExistsException;
 import com.dream.six.repository.RoleRepository;
 import com.dream.six.repository.UserAuthRepository;
 import com.dream.six.repository.UserInfoRepository;
+import com.dream.six.repository.WalletRepository;
 import com.dream.six.service.RoleService;
 import com.dream.six.service.UserService;
 import com.dream.six.utils.PasswordUtils;
@@ -47,15 +49,17 @@ public class UserServiceImpl implements UserService {
     private final UserAuthRepository userAuthRepository;
     private final RoleRepository roleRepository;
     private final RoleService roleService;
+    private final WalletRepository walletRepository;
 
     @Value("${super.admin.email}")
     private String email;
 
-    public UserServiceImpl(UserInfoRepository userInfoRepository, UserAuthRepository userAuthRepository, RoleRepository roleRepository, RoleService roleService) {
+    public UserServiceImpl(UserInfoRepository userInfoRepository, UserAuthRepository userAuthRepository, RoleRepository roleRepository, RoleService roleService, WalletRepository walletRepository) {
         this.userInfoRepository = userInfoRepository;
         this.userAuthRepository = userAuthRepository;
         this.roleRepository = roleRepository;
         this.roleService = roleService;
+        this.walletRepository = walletRepository;
     }
 
     @Override
@@ -86,8 +90,12 @@ public class UserServiceImpl implements UserService {
                 log.warn("No roles provided for the user .");
             }
         }
-        //Save User
-        userInfoRepository.save(userInfo);
+        UserInfoEntity userInfoEntity=userInfoRepository.save(userInfo);
+
+        WalletEntity walletEntity = new WalletEntity();
+                walletEntity.setCreatedByUUID(userInfoEntity.getId());
+                walletRepository.save(walletEntity);
+
         log.info("User created successfully: {}", userInfo.getPhoneNumber());
         if (userInfo.getId() == null) {
             throw new ResourceNotFoundException(ErrorMessageConstants.USER_NOT_FOUND);
