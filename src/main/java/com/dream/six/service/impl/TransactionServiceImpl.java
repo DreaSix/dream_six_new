@@ -158,7 +158,8 @@ public class TransactionServiceImpl implements TransactionService {
             throw new RuntimeException("Invalid UUID format in MDC: " + MDC.get(Constants.USER_UUID_ATTRIBUTE), e);
         }
 
-        WalletEntity walletEntity = walletRepository.findByCreatedByUUID(userUUID);
+        WalletEntity walletEntity = walletRepository.findByCreatedByUUID(userUUID)
+                .orElseThrow(() -> new RuntimeException("Wallet not found for user UUID: " + userUUID));
         BigDecimal newBalance = walletEntity.getBalance().add(BigDecimal.valueOf(transaction.getAmount()));
         if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
             throw new RuntimeException("Insufficient balance");
@@ -209,7 +210,8 @@ public class TransactionServiceImpl implements TransactionService {
             throw new RuntimeException("Invalid UUID format in MDC: " + MDC.get(Constants.USER_UUID_ATTRIBUTE), e);
         }
 
-        WalletEntity walletEntity = walletRepository.findByCreatedByUUID(userUUID);
+        WalletEntity walletEntity = walletRepository.findByCreatedByUUID(userUUID)
+                .orElseThrow(() -> new RuntimeException("Wallet not found for user UUID: " + userUUID));
         BigDecimal newBalance = walletEntity.getBalance().subtract(BigDecimal.valueOf(transaction.getAmount()));
         if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
             throw new RuntimeException("Insufficient balance");

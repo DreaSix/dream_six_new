@@ -52,4 +52,10 @@ public class ApiResponseMessages {
     public static final String MATCH_DETAILS_UPDATED_SUCCESSFULLY = "Match details updated successfully.";
     public static final String MATCH_DETAILS_DELETED_SUCCESSFULLY = "Match details delete successfully.";
 
+    public static final String WALLET_DETAILS_FETCHED_SUCCESSFULLY = "Wallet details fetched successfully for that user";
+    public static final String ALL_WALLET_DETAILS_FETCHED_SUCCESSFULLY = "All Wallet details fetched successfully ";
+    public static final String AMOUNT_ADD_WALLET_SUCCESSFULLY = "Amount added in wallet successfully";
+
+
+
 }

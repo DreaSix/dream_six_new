@@ -23,13 +23,5 @@ public class UserResponseVO {
 
     private String updatedAt;
 
-    private WalletResponse walletResponse;
 
-    @Data
-    public static class WalletResponse {
-
-        private UUID walletId;
-        private BigDecimal balance;
-        private BigDecimal netExposure;
-    }
 }

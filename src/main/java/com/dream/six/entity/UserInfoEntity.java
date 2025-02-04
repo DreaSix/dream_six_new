@@ -46,8 +46,6 @@ public class UserInfoEntity extends BaseEntity implements UserDetails {
     @JsonIgnoreProperties("userInfo")
     private UserAuthEntity userAuthEntity;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-    private WalletEntity wallet;
 
 
     @Override
