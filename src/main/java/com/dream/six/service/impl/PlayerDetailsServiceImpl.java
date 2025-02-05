@@ -74,19 +74,31 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
     public void saveTeamPlayerDetails(TeamPlayerDetailsRequest teamPlayerDetailsRequest) throws Exception {
         // Fetch match details
         MatchDetails matchDetails = matchDetailsRepository.findById(teamPlayerDetailsRequest.getMatchId())
-                .orElseThrow(() -> new ResourceNotFoundException("No match is found with this id"));
+                .orElseThrow(() -> new ResourceNotFoundException("No match is found with this ID"));
 
-
+        // Fetch all players
         List<PlayerDetails> playerDetailsList = playerDetailsRepository.findAllById(teamPlayerDetailsRequest.getPlayerIds());
 
+        // Check if a team with the same match and players already exists
+        List<TeamPlayerDetails> existingTeams = teamPlayerDetailsRepository.findByMatchDetailsAndPlayers(matchDetails, playerDetailsList);
+
+        String baseTeamName = teamPlayerDetailsRequest.getTeamName();
+        String newTeamName = baseTeamName;
+
+        if (!existingTeams.isEmpty()) {
+            // Generate a unique team name by appending a count
+            int count = existingTeams.size();
+            newTeamName = baseTeamName + " (" + (count + 1) + ")";
+        }
+
         // Create a new TeamPlayerDetails entry
-        TeamPlayerDetails teamPlayerDetails = new TeamPlayerDetails();
-        teamPlayerDetails.setTeamName(teamPlayerDetailsRequest.getTeamName());
-        teamPlayerDetails.setMatchDetails(matchDetails);
-        teamPlayerDetails.setPlayers(playerDetailsList);
+        TeamPlayerDetails newTeamPlayerDetails = new TeamPlayerDetails();
+        newTeamPlayerDetails.setTeamName(newTeamName);
+        newTeamPlayerDetails.setMatchDetails(matchDetails);
+        newTeamPlayerDetails.setPlayers(playerDetailsList);
 
         // Save new team players
-        teamPlayerDetailsRepository.save(teamPlayerDetails);
+        teamPlayerDetailsRepository.save(newTeamPlayerDetails);
     }
 
     @Override
