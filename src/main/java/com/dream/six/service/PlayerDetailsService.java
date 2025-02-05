@@ -18,6 +18,6 @@ public interface PlayerDetailsService {
 
     void saveTeamPlayerDetails(TeamPlayerDetailsRequest teamPlayerDetailsRequest) throws Exception;
 
-    List<MatchPlayerDetailsResponse> getMatchTeamPlayers(UUID id);
+    MatchPlayerDetailsResponse getMatchTeamPlayers(UUID id);
 
 }

@@ -3,7 +3,9 @@ package com.dream.six.service.impl;
 import com.dream.six.entity.MatchDetails;
 import com.dream.six.entity.PlayerDetails;
 import com.dream.six.entity.TeamPlayerDetails;
+import com.dream.six.enums.PlayerStatus;
 import com.dream.six.exception.ResourceNotFoundException;
+import com.dream.six.mapper.ModelMapper;
 import com.dream.six.repository.MatchDetailsRepository;
 import com.dream.six.repository.PlayerDetailsRepository;
 import com.dream.six.repository.TeamPlayerDetailsRepository;
@@ -30,6 +32,7 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
     private final MatchDetailsRepository matchDetailsRepository;
 
     private final TeamPlayerDetailsRepository teamPlayerDetailsRepository;
+    private final ModelMapper modelMapper;
 
     @Override
     public void savePlayerDetails(PlayerDetailsRequest playerDetailsRequest) throws IOException {
@@ -39,11 +42,10 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
         playerDetails.setCountryName(playerDetailsRequest.getCountryName());
         MultipartFile playerImage = playerDetailsRequest.getPlayerImage();
         if (playerImage != null && !playerImage.isEmpty()) {
-            // Convert the image file to a byte array
             byte[] imageBytes = playerImage.getBytes();
-            // Set the byte array to matchDetails
             playerDetails.setPlayerImage(imageBytes);
         }
+        playerDetails.setStatus(String.valueOf(PlayerStatus.UN_SOLD));
 
         playerDetailsRepository.save(playerDetails);
     }
@@ -70,53 +72,39 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
 
     @Override
     public void saveTeamPlayerDetails(TeamPlayerDetailsRequest teamPlayerDetailsRequest) throws Exception {
-        Optional<MatchDetails> optionalMatchDetails = matchDetailsRepository.findById(teamPlayerDetailsRequest.getMatchId());
-        if (optionalMatchDetails.isEmpty()){
-            throw new ResourceNotFoundException("No match is found with this id");
-        }
-        List<TeamPlayerDetails> teamPlayers = teamPlayerDetailsRepository.findByMatchDetailsAndTeamName(optionalMatchDetails.get(), teamPlayerDetailsRequest.getTeamName());
-        teamPlayerDetailsRepository.deleteAll(teamPlayers);
-        List<TeamPlayerDetails> teamPlayerDetailsList = new ArrayList<>();
-        List<PlayerDetails> playerDetails = playerDetailsRepository.findAllByPlayerIds(teamPlayerDetailsRequest.getPlayerIds());
-        MatchDetails matchDetails1 = optionalMatchDetails.get();
-        for (PlayerDetails playerDetails1 : playerDetails){
-            TeamPlayerDetails teamPlayerDetails = new TeamPlayerDetails();
-            teamPlayerDetails.setTeamName(teamPlayerDetailsRequest.getTeamName());
-            teamPlayerDetails.setPlayer(playerDetails1);
-            teamPlayerDetails.setMatchDetails(matchDetails1);
+        // Fetch match details
+        MatchDetails matchDetails = matchDetailsRepository.findById(teamPlayerDetailsRequest.getMatchId())
+                .orElseThrow(() -> new ResourceNotFoundException("No match is found with this id"));
 
-            teamPlayerDetailsList.add(teamPlayerDetails);
-        }
 
-        teamPlayerDetailsRepository.saveAll(teamPlayerDetailsList);
+        List<PlayerDetails> playerDetailsList = playerDetailsRepository.findAllById(teamPlayerDetailsRequest.getPlayerIds());
 
+        // Create a new TeamPlayerDetails entry
+        TeamPlayerDetails teamPlayerDetails = new TeamPlayerDetails();
+        teamPlayerDetails.setTeamName(teamPlayerDetailsRequest.getTeamName());
+        teamPlayerDetails.setMatchDetails(matchDetails);
+        teamPlayerDetails.setPlayers(playerDetailsList);
+
+        // Save new team players
+        teamPlayerDetailsRepository.save(teamPlayerDetails);
     }
 
     @Override
-    public List<MatchPlayerDetailsResponse> getMatchTeamPlayers(UUID id) {
-        // Find match details by ID
-        Optional<MatchDetails> matchDetailsOptional = matchDetailsRepository.findById(id);
-        if (matchDetailsOptional.isEmpty()) {
-            throw new ResourceNotFoundException("No match details present with this ID");
-        }
+    public MatchPlayerDetailsResponse getMatchTeamPlayers(UUID id) {
+        TeamPlayerDetails matchDetails = teamPlayerDetailsRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No match details present with this ID"));
 
-        MatchDetails matchDetails = matchDetailsOptional.get();
-
-        // Fetch team-player details for the match
-        List<TeamPlayerDetails> teamPlayerDetailsList = teamPlayerDetailsRepository.findByMatchDetails(matchDetails);
-
-        // Convert team-player details to response
-        return teamPlayerDetailsList.stream().map(teamPlayer -> {
-            PlayerDetails player = teamPlayer.getPlayer();
-
-            MatchPlayerDetailsResponse response = new MatchPlayerDetailsResponse();
-            response.setPlayerId(player.getId());
-            response.setPlayerName(player.getPlayerName());
-            response.setCountryName(player.getCountryName());
-            response.setTeamName(teamPlayer.getTeamName());
-            response.setPlayerImage(Base64.getEncoder().encodeToString(player.getPlayerImage()));
-            response.setMatchId(id);
-            return response;
-        }).collect(Collectors.toList());
+        MatchPlayerDetailsResponse matchPlayerDetailsResponse = new MatchPlayerDetailsResponse();
+        matchPlayerDetailsResponse.setId(matchDetails.getId());
+        matchPlayerDetailsResponse.setTeamName(matchDetails.getTeamName());
+        matchPlayerDetailsResponse.setMatchDetailsResponse(modelMapper.convertEntityToMatchDetailsResponse(matchDetails.getMatchDetails()));
+        matchPlayerDetailsResponse.setPlayerDetailsResponseList(
+                matchDetails.getPlayers().stream().map(
+                        modelMapper :: convertEntityToPlayerDetailsResponse
+                ).toList()
+        );
+        return matchPlayerDetailsResponse;
     }
+
+
 }

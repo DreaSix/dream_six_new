@@ -26,4 +26,7 @@ public class PlayerDetails {
     @Column(name = "PLAYER_IMAGE")
     private byte[] playerImage;
 
+    @Column(name = "STATUS")
+    private String status;
+
 }
