@@ -69,13 +69,13 @@ public class PlayerDetailsController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<List<MatchPlayerDetailsResponse>>> getMatchPlayers(@PathVariable UUID id) throws Exception {
+    public ResponseEntity<ApiResponse<MatchPlayerDetailsResponse>> getMatchPlayers(@PathVariable UUID id) throws Exception {
         log.info("Received request to fetch match players for match ID: {}", id);
 
-        List<MatchPlayerDetailsResponse> playerDetailsResponseList = playerDetailsService.getMatchTeamPlayers(id);
-        log.info("Fetched {} players for match ID: {}", playerDetailsResponseList.size(), id);
+        MatchPlayerDetailsResponse playerDetailsResponseList = playerDetailsService.getMatchTeamPlayers(id);
+        log.info("Fetched {} players for match ID: {}", playerDetailsResponseList.getPlayerDetailsResponseList().size(), id);
 
-        ApiResponse<List<MatchPlayerDetailsResponse>> apiResponse = ApiResponse.<List<MatchPlayerDetailsResponse>>builder()
+        ApiResponse<MatchPlayerDetailsResponse> apiResponse = ApiResponse.<MatchPlayerDetailsResponse>builder()
                 .data(playerDetailsResponseList)
                 .message("Match players fetched successfully")
                 .build();

@@ -1,19 +1,17 @@
 package com.dream.six.vo.response;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.util.List;
 import java.util.UUID;
 
 @Data
 public class MatchPlayerDetailsResponse {
 
-    private UUID playerId;
-    private String playerName;
-    private String countryName;
-    private String playerImage; // Base64 encoded image
+    private UUID id;
     private String teamName;
-    private UUID matchId;
-
-
+    private MatchDetailsResponse matchDetailsResponse;
+    private List<PlayerDetailsResponse> playerDetailsResponseList;
 
 }
