@@ -45,6 +45,7 @@ public class ModelMapper {
         response.setPlayerName(player.getPlayerName());
         response.setCountryName(player.getCountryName());
         response.setPlayerImage(Base64.getEncoder().encodeToString(player.getPlayerImage()));
+        response.setBasePrice(player.getBasePrice());
         return response;
     }
 

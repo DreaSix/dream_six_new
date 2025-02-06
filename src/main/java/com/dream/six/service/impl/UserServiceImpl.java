@@ -3,7 +3,6 @@ package com.dream.six.service.impl;
 import com.dream.six.constants.Constants;
 import com.dream.six.constants.ErrorMessageConstants;
 import com.dream.six.entity.RoleEntity;
-import com.dream.six.entity.UserAuthEntity;
 import com.dream.six.entity.UserInfoEntity;
 import com.dream.six.entity.WalletEntity;
 import com.dream.six.enums.RoleEnum;
@@ -11,7 +10,6 @@ import com.dream.six.exception.InvalidInputException;
 import com.dream.six.exception.ResourceNotFoundException;
 import com.dream.six.exception.UserExistsException;
 import com.dream.six.repository.RoleRepository;
-import com.dream.six.repository.UserAuthRepository;
 import com.dream.six.repository.UserInfoRepository;
 import com.dream.six.repository.WalletRepository;
 import com.dream.six.service.RoleService;
@@ -46,20 +44,18 @@ import static com.dream.six.mapper.CommonMapper.mapper;
 public class UserServiceImpl implements UserService {
 
     private final UserInfoRepository userInfoRepository;
-    private final UserAuthRepository userAuthRepository;
     private final RoleRepository roleRepository;
-    private final RoleService roleService;
     private final WalletRepository walletRepository;
+    private final RoleService roleService;
 
     @Value("${super.admin.email}")
     private String email;
 
-    public UserServiceImpl(UserInfoRepository userInfoRepository, UserAuthRepository userAuthRepository, RoleRepository roleRepository, RoleService roleService, WalletRepository walletRepository) {
+    public UserServiceImpl(UserInfoRepository userInfoRepository, RoleRepository roleRepository, RoleService roleService, WalletRepository walletRepository, WalletRepository walletRepository1) {
         this.userInfoRepository = userInfoRepository;
-        this.userAuthRepository = userAuthRepository;
         this.roleRepository = roleRepository;
         this.roleService = roleService;
-        this.walletRepository = walletRepository;
+        this.walletRepository = walletRepository1;
     }
 
     @Override
@@ -69,7 +65,14 @@ public class UserServiceImpl implements UserService {
         if (userInfoRepository.existsByPhoneNumberAndIsDeletedFalse(request.getPhoneNumber()))
             throw new UserExistsException(ErrorMessageConstants.USER_EMAIL_EXISTS);
 
-        UserInfoEntity userInfo = mapper.convertUserRequestToUserInfoEntity(request);
+        UserInfoEntity userInfo = new UserInfoEntity();
+
+        userInfo.setName( request.getName() );
+        userInfo.setPhoneNumber( request.getPhoneNumber() );
+        userInfo.setUserName(request.getPhoneNumber());
+        userInfo.setPassword(request.getPassword());
+        userInfo.setEncodedPassword(PasswordUtils.hashPassword(request.getPassword()));
+
         //Check roles available or not.
         if (request.getRoles() != null) {
             List<RoleEntity> roleEntities = request.getRoles().stream()
@@ -100,20 +103,6 @@ public class UserServiceImpl implements UserService {
         if (userInfo.getId() == null) {
             throw new ResourceNotFoundException(ErrorMessageConstants.USER_NOT_FOUND);
         }
-        if (userAuthRepository.existsByUserNameAndIsDeletedFalse(userInfo.getPhoneNumber()))
-            throw new UserExistsException(ErrorMessageConstants.ROLE_NAME_EXISTS);
-
-        UserAuthEntity auth = new UserAuthEntity();
-        auth.setUserName(userInfo.getPhoneNumber());
-        if (request.getPassword() != null) {
-            auth.setPassword(request.getPassword());
-        } else {
-            auth.setPassword(PasswordUtils.generateDummyPassword());
-        }
-        auth.setEncodedPassword(PasswordUtils.hashPassword(auth.getPassword()));
-        auth.setUserId(userInfo.getId());
-
-        userAuthRepository.save(auth);
         log.info("Authentication credentials generated for user: {}", userInfo.getPhoneNumber());
         return mapper.convertUserInfoEntityToUserResponse(userInfo);
     }
@@ -136,14 +125,6 @@ public class UserServiceImpl implements UserService {
         newUserInfo.setUpdatedAt(userInfo.getUpdatedAt());
         newUserInfo.setRoles(userInfo.getRoles());
 
-        if (!newUserInfo.getPhoneNumber().equals(userInfo.getPhoneNumber())) {
-            if (userAuthRepository.existsByUserNameAndIsDeletedFalse(request.getPhoneNumber()))
-                throw new UserExistsException(ErrorMessageConstants.USER_NAME_EXISTS);
-            UserAuthEntity userAuthEntity = userAuthRepository.findByUserNameAndIsDeletedFalse(userInfo.getUsername())
-                    .orElseThrow(() -> new ResourceNotFoundException(ErrorMessageConstants.USER_NOT_CREDENTIALS_FOUND));
-            userAuthEntity.setUserName(request.getPhoneNumber());
-            userAuthRepository.save(userAuthEntity);
-        }
         userInfoRepository.save(newUserInfo);
 
         AssignRoleRequestVO assignRoleRequestVO = new AssignRoleRequestVO();
@@ -193,33 +174,22 @@ public class UserServiceImpl implements UserService {
         if (Boolean.TRUE.equals(userInfo.getIsRoot())) {
             throw new InvalidInputException(ErrorMessageConstants.SUPER_ADMIN_CHECK);
         }
-        UserAuthEntity userAuthEntity = userAuthRepository.findByUserNameAndIsDeletedFalse(userInfo.getPhoneNumber())
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessageConstants.USER_NOT_FOUND));
-
-        userInfo.setDeleted(true);
-        userInfo.setDeletedAt(Timestamp.valueOf(LocalDateTime.now()));
-        userAuthEntity.setDeleted(true);
-        userAuthEntity.setDeletedAt(Timestamp.valueOf(LocalDateTime.now()));
-        userInfoRepository.save(userInfo);
-        userAuthRepository.save(userAuthEntity);
 
         log.info("User Info with ID {} deleted successfully (soft delete).", id);
     }
 
     @Override
     public void changePassword(ChangePasswordRequestVO requestVO, UUID userId) {
-        UserAuthEntity userAuthEntity = userAuthRepository.findByUserIdAndIsDeletedFalse(userId)
+        UserInfoEntity userInfo = userInfoRepository.findByIdAndIsDeletedFalse(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(String.format(ErrorMessageConstants.RESOURCE_WITH_ID_NOT_FOUND, ErrorMessageConstants.USER_NOT_FOUND, userId)));
-
-        Optional.of(userAuthEntity.getPassword())
-                .filter(password -> password.equals(requestVO.getPassword()))
-                .orElseThrow(() -> new InvalidInputException(ErrorMessageConstants.INVALID_CURRENT_PASSWORD));
-
-        userAuthEntity.setPassword(requestVO.getNewPassword());
-        String newHashedPassword =PasswordUtils.hashPassword(requestVO.getNewPassword());
-        userAuthEntity.setEncodedPassword(newHashedPassword);
-        userAuthEntity.setUpdatedAt(Timestamp.from(Instant.now()));
-        userAuthRepository.save(userAuthEntity);
+        if (userInfo.getPassword().equals(requestVO.getPassword())) {
+            throw new InvalidInputException(ErrorMessageConstants.INVALID_CURRENT_PASSWORD);
+        }
+        String password = requestVO.getNewPassword();
+        userInfo.setPassword(password);
+        String newHashedPassword =PasswordUtils.hashPassword(password);
+        userInfo.setEncodedPassword(newHashedPassword);
+        userInfoRepository.save(userInfo);
     }
 
     @Override

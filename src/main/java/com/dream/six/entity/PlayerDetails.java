@@ -29,4 +29,7 @@ public class PlayerDetails {
     @Column(name = "STATUS")
     private String status;
 
+    @Column(name = "BASE_PRICE")
+    private double basePrice;
+
 }

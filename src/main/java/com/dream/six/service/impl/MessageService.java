@@ -62,7 +62,7 @@ public class MessageService {
         messageRepository.save(messageDetail);
 
 
-        messagingTemplate.convertAndSend("/chatroom/public", existingBid);
+        messagingTemplate.convertAndSend("/topic/messages/" + bidId, messageDetail);
         List<MessageDetails> messageDetailsList = messageRepository.findByBidId(existingBid.getId());
 
         List<BidResponseDTO.MessageResponseDTO> messageResponseDTOList = messageDetailsList.stream()

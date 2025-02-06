@@ -14,6 +14,7 @@ public class PlayerDetailsResponse {
     private String countryName;
 
     private String playerImage;
+    private double basePrice;
 
 
 }

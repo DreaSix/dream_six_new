@@ -9,9 +9,9 @@ import io.swagger.v3.oas.annotations.security.SecurityScheme;
 
 @OpenAPIDefinition(
         info = @Info(
-                title = "DPOne Platform",
+                title = "DREAM Platform",
                 version = "1.0",
-                description = "DPOne Platform API"
+                description = "DREAM Platform API"
         ),
         security = {
                 @SecurityRequirement(name = "bearerAuth")

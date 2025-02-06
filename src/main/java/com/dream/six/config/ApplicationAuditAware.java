@@ -24,7 +24,6 @@ public class ApplicationAuditAware implements AuditorAware<UUID> {
         }
 
         UserInfoEntity userPrincipal = (UserInfoEntity) authentication.getPrincipal();
-        Optional<UUID> userId = Optional.ofNullable(userPrincipal.getId());
-        return  userId;
+        return Optional.ofNullable(userPrincipal.getId());
     }
 }
