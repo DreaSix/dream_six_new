@@ -12,5 +12,8 @@ public class PlayerDetailsRequest {
 
     private MultipartFile playerImage;
 
+    private double basePrice;
+
+
 
 }

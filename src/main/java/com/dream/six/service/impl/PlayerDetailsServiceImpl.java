@@ -46,6 +46,7 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
             playerDetails.setPlayerImage(imageBytes);
         }
         playerDetails.setStatus(String.valueOf(PlayerStatus.UN_SOLD));
+        playerDetails.setBasePrice(playerDetailsRequest.getBasePrice());
 
         playerDetailsRepository.save(playerDetails);
     }
@@ -64,6 +65,7 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
             String base64Image = Base64.getEncoder().encodeToString(imageBytes);
 
             playerDetailsResponse1.setPlayerImage(base64Image);
+            playerDetailsResponse1.setBasePrice(playerDetails1.getBasePrice());
 
             playerDetailsResponse.add(playerDetailsResponse1);
         }
@@ -76,28 +78,23 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
         MatchDetails matchDetails = matchDetailsRepository.findById(teamPlayerDetailsRequest.getMatchId())
                 .orElseThrow(() -> new ResourceNotFoundException("No match is found with this ID"));
 
-        // Fetch all players
         List<PlayerDetails> playerDetailsList = playerDetailsRepository.findAllById(teamPlayerDetailsRequest.getPlayerIds());
 
-        // Check if a team with the same match and players already exists
         List<TeamPlayerDetails> existingTeams = teamPlayerDetailsRepository.findByMatchDetailsAndPlayers(matchDetails, playerDetailsList);
 
         String baseTeamName = teamPlayerDetailsRequest.getTeamName();
         String newTeamName = baseTeamName;
 
         if (!existingTeams.isEmpty()) {
-            // Generate a unique team name by appending a count
             int count = existingTeams.size();
             newTeamName = baseTeamName + " (" + (count + 1) + ")";
         }
 
-        // Create a new TeamPlayerDetails entry
         TeamPlayerDetails newTeamPlayerDetails = new TeamPlayerDetails();
         newTeamPlayerDetails.setTeamName(newTeamName);
         newTeamPlayerDetails.setMatchDetails(matchDetails);
         newTeamPlayerDetails.setPlayers(playerDetailsList);
 
-        // Save new team players
         teamPlayerDetailsRepository.save(newTeamPlayerDetails);
     }
 

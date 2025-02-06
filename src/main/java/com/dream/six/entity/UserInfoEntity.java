@@ -41,10 +41,9 @@ public class UserInfoEntity extends BaseEntity implements UserDetails {
     @JsonIgnoreProperties("users")
     private List<RoleEntity> roles;
 
-
-    @OneToOne(mappedBy = "userInfo", fetch = FetchType.EAGER)
-    @JsonIgnoreProperties("userInfo")
-    private UserAuthEntity userAuthEntity;
+    private String password;
+    private String userName;
+    private String encodedPassword;
 
 
 
@@ -59,7 +58,7 @@ public class UserInfoEntity extends BaseEntity implements UserDetails {
 
     @Override
     public String getPassword() {
-        return userAuthEntity.getEncodedPassword();
+        return encodedPassword;
     }
 
     @Override

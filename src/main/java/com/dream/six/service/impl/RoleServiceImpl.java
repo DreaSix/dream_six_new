@@ -5,7 +5,6 @@ import com.dream.six.constants.ErrorMessageConstants;
 import com.dream.six.entity.RoleEntity;
 import com.dream.six.entity.UserInfoEntity;
 import com.dream.six.enums.RoleEnum;
-import com.dream.six.exception.InvalidFileNameException;
 import com.dream.six.exception.InvalidInputException;
 import com.dream.six.exception.ResourceNotFoundException;
 import com.dream.six.exception.UserExistsException;
@@ -14,29 +13,19 @@ import com.dream.six.repository.UserInfoRepository;
 import com.dream.six.service.RoleService;
 import com.dream.six.vo.ApiPageResponse;
 import com.dream.six.vo.request.*;
-import com.dream.six.vo.response.PermissionsResponseVO;
 import com.dream.six.vo.response.RoleResponseVO;
-import com.opencsv.CSVWriter;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.*;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.dream.six.mapper.CommonMapper.mapper;
 

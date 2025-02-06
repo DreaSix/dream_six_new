@@ -31,4 +31,5 @@ public interface UserInfoRepository extends JpaRepository<UserInfoEntity, UUID>{
     List<UserInfoEntity> findByRoles_NameOrderByCreatedAtDesc(String roleName);
 
 
+    Optional<UserInfoEntity> findByUserNameAndIsDeletedFalse(String username);
 }

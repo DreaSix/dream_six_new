@@ -1,6 +1,7 @@
 package com.dream.six.api;
 
 import com.dream.six.constants.ApiResponseMessages;
+import com.dream.six.constants.Constants;
 import com.dream.six.service.UserService;
 import com.dream.six.vo.ApiPageResponse;
 import com.dream.six.vo.ApiResponse;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -35,10 +37,9 @@ public class UserAPI {
 
     @GetMapping("/info")
     public ResponseEntity<ApiResponse<String>> getHelloMessage() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserInfoEntity userInfoEntity = (UserInfoEntity) authentication.getPrincipal();
-        log.info("Creating by user: {}", userInfoEntity.getPhoneNumber());
-
+        String userUUID = MDC.get(Constants.USER_UUID_ATTRIBUTE);
+        String username= MDC.get(Constants.USERNAME_ATTRIBUTE);
+        System.out.println(username+" "+userUUID);
         ApiResponse<String> response = ApiResponse.<String>builder()
                 .data("Hello,DemandPage!")
                 .message("")
