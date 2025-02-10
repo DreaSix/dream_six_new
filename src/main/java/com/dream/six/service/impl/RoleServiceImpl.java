@@ -39,8 +39,6 @@ public class RoleServiceImpl implements RoleService {
     private final RoleRepository roleRepository;
 
 
-    @Value("${featureName}")
-    private String featureNameString;
 
     // @CacheEvict(cacheNames = "ROLE-PERMISSIONS", allEntries = true)
     @Override
