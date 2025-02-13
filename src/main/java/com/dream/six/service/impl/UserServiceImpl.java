@@ -146,7 +146,11 @@ public class UserServiceImpl implements UserService {
 
         log.info("User found successfully");
 
-        return mapper.convertUserInfoEntityToUserResponse(userInfo);
+        UserResponseVO userResponse = mapper.convertUserInfoEntityToUserResponse(userInfo);
+
+        userResponse.setName(userInfo.getName());
+
+        return userResponse;
     }
 
     @Override
@@ -157,7 +161,13 @@ public class UserServiceImpl implements UserService {
         var userInfoPage = userInfoRepository.findAllByIsDeletedFalse(pageable);
 
         var users = userInfoPage.getContent().stream()
-                .map(mapper::convertUserInfoEntityToUserResponse)
+                .map(item -> {
+                    UserResponseVO userResponseVO = mapper.convertUserInfoEntityToUserResponse(item);
+                    userResponseVO.setName(item.getName());
+
+                    return userResponseVO;
+
+                })
                 .toList();
 
         log.info("Retrieved {} users", users.size());

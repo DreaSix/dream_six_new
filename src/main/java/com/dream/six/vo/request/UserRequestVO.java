@@ -13,7 +13,7 @@ import java.util.UUID;
 public class UserRequestVO {
 
     @NotBlank(message = " name is required")
-    private String Name;
+    private String name;
 
     @Pattern(
             regexp = "^[+]?[0-9]{10,15}$",

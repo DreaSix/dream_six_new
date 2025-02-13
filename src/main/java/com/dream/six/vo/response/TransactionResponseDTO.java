@@ -14,5 +14,7 @@ public class TransactionResponseDTO {
     private PaymentResponseDTO paymentResponseDTO;
     private TransactionType transactionType;
     private Status approvalStatus;
+    private String userName;
+    private String transactionImage;
 
 }

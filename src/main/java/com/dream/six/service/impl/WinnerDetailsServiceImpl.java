@@ -41,10 +41,6 @@ public class WinnerDetailsServiceImpl implements WinnerDetailsService {
         winnerDetails.setWinnerAmount(request.getWinnerAmount());
         winnerDetails.setMatchDetails(matchDetails);
         winnerDetails.setPlayerDetails(playerDetails);
-
-        if (request.getWinnerImage() != null && !request.getWinnerImage().isEmpty()) {
-            winnerDetails.setWinnerImage(request.getWinnerImage().getBytes());
-        }
         return winnerDetails;
     }
 }
