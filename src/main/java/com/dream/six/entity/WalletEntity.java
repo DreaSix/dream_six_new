@@ -18,7 +18,6 @@ public class WalletEntity extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-
     @Column(name = "BALANCE", nullable = false)
     private BigDecimal balance = BigDecimal.ZERO;
 

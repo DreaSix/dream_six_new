@@ -30,4 +30,5 @@ public interface RoleRepository extends JpaRepository<RoleEntity, UUID> {
     List<RoleEntity> findByListOfNamesAndIsDeletedFalse(List<String> roleNames);
 
 
+    Optional<Object> findByName(String roleName);
 }

@@ -126,9 +126,18 @@ public class TransactionController {
     @PutMapping("/{id}/approval-status")
     public ResponseEntity<ApiResponse<TransactionResponseDTO>> updateApprovalStatus(
             @PathVariable UUID id,
-            @RequestParam Status approvalStatus) {
+            @RequestParam String approvalStatus) { // Accept as String
         log.info("Updating approval status for transaction ID: {} to {}", id, approvalStatus);
-        TransactionResponseDTO response = transactionService.updateApprovalStatus(id, approvalStatus);
+
+        // Convert String to Enum manually
+        Status statusEnum;
+        try {
+            statusEnum = Status.valueOf(approvalStatus.toUpperCase()); // Convert to uppercase
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid approval status: " + approvalStatus);
+        }
+
+        TransactionResponseDTO response = transactionService.updateApprovalStatus(id, statusEnum);
         log.info("Approval status updated successfully for transaction ID: {}", id);
 
         ApiResponse<TransactionResponseDTO> apiResponse = ApiResponse.<TransactionResponseDTO>builder()
@@ -138,6 +147,7 @@ public class TransactionController {
 
         return ResponseEntity.ok(apiResponse);
     }
+
 
     @GetMapping("/filter")
     public ResponseEntity<ApiResponse<List<TransactionResponseDTO>>> getTransactionsByTypeAndStatus(

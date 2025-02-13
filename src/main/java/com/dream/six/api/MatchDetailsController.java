@@ -24,7 +24,7 @@ public class MatchDetailsController {
     private final MatchDetailsService matchDetailsService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<MatchDetails>> createMatchDetails(@RequestBody MatchDetailsRequest matchDetailsRequest) throws IOException {
+    public ResponseEntity<ApiResponse<MatchDetails>> createMatchDetails(@ModelAttribute MatchDetailsRequest matchDetailsRequest) throws IOException {
         log.info("Received request to create match details: {}", matchDetailsRequest);
         MatchDetails matchDetails = matchDetailsService.saveMatchDetails(matchDetailsRequest);
         log.info("Match details created successfully with ID: {}", matchDetails.getId());

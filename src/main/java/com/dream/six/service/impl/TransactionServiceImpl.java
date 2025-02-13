@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
@@ -88,7 +89,17 @@ public class TransactionServiceImpl implements TransactionService {
         List<Transaction> transactions = transactionRepository.findAll();
 
         return transactions.stream()
-                .map(mapper::convertEntityToTransactionResponseDTO)
+                .map(item -> {
+                    TransactionResponseDTO transactionResponseDTO = mapper.convertEntityToTransactionResponseDTO(item);
+                    transactionResponseDTO.setUserName(item.getCreatedBy());
+                    byte[] imageBytes = item.getTransactionImage();
+
+                    String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+
+                    transactionResponseDTO.setTransactionImage(base64Image);
+
+                    return transactionResponseDTO;
+                })
                 .toList();
     }
 

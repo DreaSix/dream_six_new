@@ -20,7 +20,7 @@ public class WinnerDetailsController {
     private final WinnerDetailsService winnerDetailsService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<String>> createWinner(@ModelAttribute WinnerDetailsRequest request) throws Exception {
+    public ResponseEntity<ApiResponse<String>> createWinner(@RequestBody WinnerDetailsRequest request) throws Exception {
         log.info("Received request to create winner: {}", request);
 
         winnerDetailsService.createWinner(request);
