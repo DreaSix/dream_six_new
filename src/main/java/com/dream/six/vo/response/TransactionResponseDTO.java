@@ -4,6 +4,7 @@ import com.dream.six.enums.Status;
 import com.dream.six.enums.TransactionType;
 import lombok.Data;
 
+import java.sql.Timestamp;
 import java.util.UUID;
 
 @Data
@@ -16,5 +17,6 @@ public class TransactionResponseDTO {
     private Status approvalStatus;
     private String userName;
     private String transactionImage;
+    private Timestamp createdAt;
 
 }

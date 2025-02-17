@@ -31,9 +31,6 @@ public class WinnerDetails  extends BaseEntity{
     @Column(name = "WINNER_AMOUNT")
     private Double winnerAmount;
 
-    @JoinColumn(name = "PLAYER_ID")
-    @ManyToOne
-    private  PlayerDetails playerDetails;
 
 
 }

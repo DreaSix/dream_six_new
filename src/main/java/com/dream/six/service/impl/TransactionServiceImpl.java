@@ -52,7 +52,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         Transaction transaction = new Transaction();
         transaction.setAmount(requestDTO.getAmount());
-        transaction.setTransactionImage(requestDTO.getTransactionImage().getBytes());
+        transaction.setImage(requestDTO.getTransactionImage().getBytes());
         transaction.setUtr(requestDTO.getUtr());
         transaction.setPayment(payment);
         transaction.setTransactionType(requestDTO.getTransactionType());
@@ -92,7 +92,7 @@ public class TransactionServiceImpl implements TransactionService {
                 .map(item -> {
                     TransactionResponseDTO transactionResponseDTO = mapper.convertEntityToTransactionResponseDTO(item);
                     transactionResponseDTO.setUserName(item.getCreatedBy());
-                    byte[] imageBytes = item.getTransactionImage();
+                    byte[] imageBytes = item.getImage();
 
                     String base64Image = Base64.getEncoder().encodeToString(imageBytes);
 
@@ -137,7 +137,7 @@ public class TransactionServiceImpl implements TransactionService {
                 .orElseThrow(() -> new RuntimeException("Payment not found for ID: " + requestDTO.getPaymentId()));
 
         transaction.setAmount(requestDTO.getAmount());
-        transaction.setTransactionImage(requestDTO.getTransactionImage().getBytes());
+        transaction.setImage(requestDTO.getTransactionImage().getBytes());
         transaction.setUtr(requestDTO.getUtr());
         transaction.setPayment(payment);
         transaction.setTransactionType(requestDTO.getTransactionType());
@@ -225,7 +225,7 @@ public class TransactionServiceImpl implements TransactionService {
         Transaction transaction = transactionRepository.findById(updateTransactionDTO.getTransactionId())
                 .orElseThrow(() -> new EntityNotFoundException("Transaction not found"));
 
-        transaction.setTransactionImage(updateTransactionDTO.getTransactionImage().getBytes());
+        transaction.setImage(updateTransactionDTO.getTransactionImage().getBytes());
         transaction.setApprovalStatus(updateTransactionDTO.getApprovalStatus());
 
         UUID userUUID;

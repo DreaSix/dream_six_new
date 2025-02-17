@@ -11,7 +11,6 @@ public class WinnerDetailsRequest {
     private String winnerName;
     private UUID matchId;
     private Double winnerAmount;
-    private UUID playerId;
 
 
 }

@@ -9,10 +9,16 @@ import com.dream.six.repository.PlayerDetailsRepository;
 import com.dream.six.repository.WinnerDetailsRepository;
 import com.dream.six.service.WinnerDetailsService;
 import com.dream.six.vo.request.WinnerDetailsRequest;
+import com.dream.six.vo.response.MatchDetailsResponse;
+import com.dream.six.vo.response.WinnerDetailsResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -27,20 +33,42 @@ public class WinnerDetailsServiceImpl implements WinnerDetailsService {
         MatchDetails matchDetails = matchDetailsRepository.findById(request.getMatchId())
                 .orElseThrow(() -> new ResourceNotFoundException("Match details not found with ID: " + request.getMatchId()));
 
-        PlayerDetails playerDetails = playerDetailsRepository.findById(request.getPlayerId())
-                .orElseThrow(() -> new ResourceNotFoundException("Player details not found with ID: " + request.getPlayerId()));
-
-        WinnerDetails winnerDetails = buildWinnerDetails(request, matchDetails, playerDetails);
+        WinnerDetails winnerDetails = buildWinnerDetails(request, matchDetails);
         winnerDetailsRepository.save(winnerDetails);
     }
 
+    @Override
+    public List<WinnerDetailsResponse> getWinnerDetails() {
+        LocalDate today = LocalDate.now();
+        LocalDate yesterday = today.minusDays(1);
 
-    private WinnerDetails buildWinnerDetails(WinnerDetailsRequest request, MatchDetails matchDetails, PlayerDetails playerDetails) throws IOException {
+        // Convert to Timestamp for database comparison
+        Timestamp startOfYesterday = Timestamp.valueOf(yesterday.atStartOfDay());
+        Timestamp endOfToday = Timestamp.valueOf(today.plusDays(1).atStartOfDay().minusSeconds(1));
+
+        List<WinnerDetails> winnerDetailsList = winnerDetailsRepository.findByCreatedAtBetween(startOfYesterday, endOfToday);
+        List<WinnerDetailsResponse> winnerDetailsResponseList = new ArrayList<>();
+
+        List<MatchDetails> matchDetails = matchDetailsRepository.findAll();
+
+        for (WinnerDetails winnerDetails: winnerDetailsList){
+            WinnerDetailsResponse winnerDetailsResponse = new WinnerDetailsResponse();
+            winnerDetailsResponse.setWinnerAmount(winnerDetails.getWinnerAmount());
+            winnerDetailsResponse.setWinnerName(winnerDetails.getWinnerName());
+
+            winnerDetailsResponseList.add(winnerDetailsResponse);
+
+        }
+
+        return winnerDetailsResponseList;
+    }
+
+
+    private WinnerDetails buildWinnerDetails(WinnerDetailsRequest request, MatchDetails matchDetails) throws IOException {
         WinnerDetails winnerDetails = new WinnerDetails();
         winnerDetails.setWinnerName(request.getWinnerName());
         winnerDetails.setWinnerAmount(request.getWinnerAmount());
         winnerDetails.setMatchDetails(matchDetails);
-        winnerDetails.setPlayerDetails(playerDetails);
         return winnerDetails;
     }
 }
