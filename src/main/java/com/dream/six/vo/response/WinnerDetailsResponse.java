@@ -3,9 +3,11 @@ package com.dream.six.vo.response;
 
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
 public class WinnerDetailsResponse {
-    private Integer id;
+    private UUID id;
     private String winnerName;
     private MatchDetailsResponse matchDetails;
     private Double winnerAmount;

@@ -4,6 +4,7 @@ import com.dream.six.entity.MatchDetails;
 import com.dream.six.entity.PlayerDetails;
 import com.dream.six.entity.WinnerDetails;
 import com.dream.six.exception.ResourceNotFoundException;
+import com.dream.six.mapper.ModelMapper;
 import com.dream.six.repository.MatchDetailsRepository;
 import com.dream.six.repository.PlayerDetailsRepository;
 import com.dream.six.repository.WinnerDetailsRepository;
@@ -27,6 +28,8 @@ public class WinnerDetailsServiceImpl implements WinnerDetailsService {
     private final MatchDetailsRepository matchDetailsRepository;
     private final PlayerDetailsRepository playerDetailsRepository;
     private final WinnerDetailsRepository winnerDetailsRepository;
+    private final ModelMapper modelMapper;
+
 
     @Override
     public void createWinner(WinnerDetailsRequest request) throws Exception {
@@ -53,8 +56,11 @@ public class WinnerDetailsServiceImpl implements WinnerDetailsService {
 
         for (WinnerDetails winnerDetails: winnerDetailsList){
             WinnerDetailsResponse winnerDetailsResponse = new WinnerDetailsResponse();
+            MatchDetails matchDetails1 = matchDetails.stream().filter(match -> match.getId().equals(winnerDetails.getMatchDetails().getId())).findFirst().get();
+            winnerDetailsResponse.setId(winnerDetails.getId());
             winnerDetailsResponse.setWinnerAmount(winnerDetails.getWinnerAmount());
             winnerDetailsResponse.setWinnerName(winnerDetails.getWinnerName());
+            winnerDetailsResponse.setMatchDetails(modelMapper.convertEntityToMatchDetailsResponse(matchDetails1));
 
             winnerDetailsResponseList.add(winnerDetailsResponse);
 
