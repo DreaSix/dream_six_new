@@ -26,6 +26,7 @@ public class MessageDetails {
 
     private String message;
     private String username;
+    private String name;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime timestamp;

@@ -2,8 +2,10 @@ package com.dream.six.service.impl;
 
 import com.dream.six.entity.BidEntity;
 import com.dream.six.entity.MessageDetails;
+import com.dream.six.entity.UserInfoEntity;
 import com.dream.six.repository.BidRepository;
 import com.dream.six.repository.MessageRepository;
+import com.dream.six.repository.UserInfoRepository;
 import com.dream.six.vo.response.BidResponseDTO;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -24,6 +27,7 @@ public class MessageService {
     private final BidRepository bidRepository;
     private final MessageRepository messageRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final UserInfoRepository userInfoRepository;
 
     @Transactional
     public BidResponseDTO createBid(UUID matchId, UUID playerId) {
@@ -53,7 +57,12 @@ public class MessageService {
         BidEntity existingBid = bidRepository.findById(bidId).orElseThrow(
                 () -> new RuntimeException("No bid exists for bidId: " + bidId));
 
+        List<UserInfoEntity> userInfoEntities = userInfoRepository.findAll();
+
+        UserInfoEntity userInfoEntity = userInfoEntities.stream().filter(user -> Objects.equals(user.getUsername(), username)).findFirst().get();
+
         MessageDetails messageDetail = new MessageDetails();
+        messageDetail.setName(userInfoEntity.getName());
         messageDetail.setBid(existingBid);
         messageDetail.setMessage(messageContent);
         messageDetail.setUsername(username);
@@ -71,6 +80,7 @@ public class MessageService {
                     messageResponseDTO.setId(messageDetails.getId());
                     messageResponseDTO.setMessage(messageDetails.getMessage());
                     messageResponseDTO.setUsername(messageDetails.getUsername());
+                    messageResponseDTO.setName(messageDetails.getName());
                     messageResponseDTO.setTimestamp(messageDetails.getTimestamp());
                     return messageResponseDTO;
                 })
@@ -91,6 +101,7 @@ public class MessageService {
         BidEntity entity = bidRepository.findById(bidId).orElseThrow(
                 () -> new RuntimeException("No bid found with bidId: " + bidId));
 
+
         List<MessageDetails> messageDetailsList = messageRepository.findByBidId(entity.getId());
 
         List<BidResponseDTO.MessageResponseDTO> messageResponseDTOList = messageDetailsList.stream()
@@ -100,6 +111,7 @@ public class MessageService {
                     messageResponseDTO.setMessage(messageDetails.getMessage());
                     messageResponseDTO.setUsername(messageDetails.getUsername());
                     messageResponseDTO.setTimestamp(messageDetails.getTimestamp());
+                    messageResponseDTO.setName(messageDetails.getName());
                     return messageResponseDTO;
                 })
                 .toList();

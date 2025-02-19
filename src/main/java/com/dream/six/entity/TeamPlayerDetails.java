@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @EqualsAndHashCode(callSuper = true)
@@ -32,4 +33,14 @@ public class TeamPlayerDetails extends BaseEntity {
             inverseJoinColumns = @JoinColumn(name = "PLAYER_ID")
     )
     private List<PlayerDetails> players;
+
+    private Map<UUID, PlayersDto> playersDtoMap;
+
+    @Data
+    public static class PlayersDto{
+        private String playerName;
+        private String status;
+        private Double basePrice;
+        private Double soldPrice;
+    }
 }
