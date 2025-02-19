@@ -4,6 +4,7 @@ import com.dream.six.service.PlayerDetailsService;
 import com.dream.six.vo.ApiResponse;
 import com.dream.six.vo.request.PlayerDetailsRequest;
 import com.dream.six.vo.request.TeamPlayerDetailsRequest;
+import com.dream.six.vo.request.UpdatePlayerSoldPriceRequest;
 import com.dream.six.vo.response.MatchPlayerDetailsResponse;
 import com.dream.six.vo.response.PlayerDetailsResponse;
 import lombok.RequiredArgsConstructor;
@@ -67,6 +68,26 @@ public class PlayerDetailsController {
 
         return ResponseEntity.ok(apiResponse);
     }
+
+    @PutMapping("/{teamPlayerId}/updateSoldPrice")
+    public ResponseEntity<ApiResponse<String>> updateSoldPrice(
+            @PathVariable UUID teamPlayerId,
+            @RequestBody UpdatePlayerSoldPriceRequest request) throws Exception {
+
+        log.info("Received request to update sold price for teamPlayerId: {}, playerId: {}",
+                teamPlayerId, request.getPlayerId());
+
+        playerDetailsService.updateSoldPrice(teamPlayerId, request);
+
+        log.info("Sold price updated successfully for playerId: {}", request.getPlayerId());
+
+        ApiResponse<String> apiResponse = ApiResponse.<String>builder()
+                .message("Player sold price updated successfully")
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<List<MatchPlayerDetailsResponse>>> getMatchPlayers(@PathVariable UUID id) {

@@ -4,6 +4,7 @@ package com.dream.six.service;
 
 import com.dream.six.vo.request.PlayerDetailsRequest;
 import com.dream.six.vo.request.TeamPlayerDetailsRequest;
+import com.dream.six.vo.request.UpdatePlayerSoldPriceRequest;
 import com.dream.six.vo.response.MatchPlayerDetailsResponse;
 import com.dream.six.vo.response.PlayerDetailsResponse;
 
@@ -17,7 +18,7 @@ public interface PlayerDetailsService {
     List<PlayerDetailsResponse> getPlayerDetails(PlayerDetailsRequest playerDetailsRequest);
 
     void saveTeamPlayerDetails(TeamPlayerDetailsRequest teamPlayerDetailsRequest) throws Exception;
-
+     void updateSoldPrice(UUID teamPlayerId, UpdatePlayerSoldPriceRequest request);
     List<MatchPlayerDetailsResponse> getMatchTeamPlayers(UUID id);
 
 }

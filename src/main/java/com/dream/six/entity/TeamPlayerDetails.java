@@ -26,13 +26,6 @@ public class TeamPlayerDetails extends BaseEntity {
     @JoinColumn(name = "MATCH_DETAILS", nullable = false)
     private MatchDetails matchDetails;
 
-    @ManyToMany
-    @JoinTable(
-            name = "TEAM_PLAYER_MAPPING",
-            joinColumns = @JoinColumn(name = "TEAM_PLAYER_ID"),
-            inverseJoinColumns = @JoinColumn(name = "PLAYER_ID")
-    )
-    private List<PlayerDetails> players;
 
     private Map<UUID, PlayersDto> playersDtoMap;
 
@@ -42,5 +35,6 @@ public class TeamPlayerDetails extends BaseEntity {
         private String status;
         private Double basePrice;
         private Double soldPrice;
+        private UUID userId;
     }
 }

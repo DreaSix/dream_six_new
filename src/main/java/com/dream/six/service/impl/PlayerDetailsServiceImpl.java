@@ -12,11 +12,13 @@ import com.dream.six.repository.TeamPlayerDetailsRepository;
 import com.dream.six.service.PlayerDetailsService;
 import com.dream.six.vo.request.PlayerDetailsRequest;
 import com.dream.six.vo.request.TeamPlayerDetailsRequest;
+import com.dream.six.vo.request.UpdatePlayerSoldPriceRequest;
 import com.dream.six.vo.response.MatchPlayerDetailsResponse;
 import com.dream.six.vo.response.PlayerDetailsResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -72,44 +74,108 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
         return playerDetailsResponse;
     }
 
+    @Transactional
     @Override
-    public void saveTeamPlayerDetails(TeamPlayerDetailsRequest teamPlayerDetailsRequest) throws Exception {
+    public void saveTeamPlayerDetails(TeamPlayerDetailsRequest teamPlayerDetailsRequest) {
         // Fetch match details
         MatchDetails matchDetails = matchDetailsRepository.findById(teamPlayerDetailsRequest.getMatchId())
-                .orElseThrow(() -> new ResourceNotFoundException("No match is found with this ID"));
+                .orElseThrow(() -> new ResourceNotFoundException("No match found with this ID"));
 
-        List<TeamPlayerDetails> teamPlayerDetails = teamPlayerDetailsRepository.findByMatchDetails(matchDetails);
-        List<TeamPlayerDetails> filteredData = teamPlayerDetails.stream().filter(item -> item.getTeamName().equals(teamPlayerDetailsRequest.getTeamName())).toList();
-        teamPlayerDetailsRepository.deleteAll(filteredData);
+        // Delete previous entries for the same team in the match
+        List<TeamPlayerDetails> existingTeamDetails = teamPlayerDetailsRepository.findByMatchDetails(matchDetails)
+                .stream()
+                .filter(item -> item.getTeamName().equals(teamPlayerDetailsRequest.getTeamName()))
+                .toList();
+
+        teamPlayerDetailsRepository.deleteAll(existingTeamDetails);
+
+        // Fetch player details from database
         List<PlayerDetails> playerDetailsList = new ArrayList<>();
-        if (!teamPlayerDetailsRequest.getPlayerIds().isEmpty()){
+        if (teamPlayerDetailsRequest.getPlayerIds() != null && !teamPlayerDetailsRequest.getPlayerIds().isEmpty()) {
             playerDetailsList = playerDetailsRepository.findAllById(teamPlayerDetailsRequest.getPlayerIds());
+
+            if (playerDetailsList.size() != teamPlayerDetailsRequest.getPlayerIds().size()) {
+                throw new ResourceNotFoundException("Some players are missing from the database.");
+            }
         }
+
+        // Convert players to PlayersDto map
+        Map<UUID, TeamPlayerDetails.PlayersDto> playersDtoMap = playerDetailsList.stream()
+                .collect(Collectors.toMap(
+                        PlayerDetails::getId,
+                        player -> {
+                            TeamPlayerDetails.PlayersDto dto = new TeamPlayerDetails.PlayersDto();
+                            dto.setPlayerName(player.getPlayerName());
+                            dto.setBasePrice(player.getBasePrice());
+                            dto.setSoldPrice(0.0); // Default to zero
+                            dto.setStatus("UNSOLD"); // Default status
+                            return dto;
+                        }
+                ));
+
+        // Save new team players
         TeamPlayerDetails newTeamPlayerDetails = new TeamPlayerDetails();
         newTeamPlayerDetails.setTeamName(teamPlayerDetailsRequest.getTeamName());
         newTeamPlayerDetails.setMatchDetails(matchDetails);
-        newTeamPlayerDetails.setPlayers(playerDetailsList);
+        newTeamPlayerDetails.setPlayersDtoMap(playersDtoMap);
 
         teamPlayerDetailsRepository.save(newTeamPlayerDetails);
     }
 
+    @Transactional
+    public void updateSoldPrice(UUID teamPlayerId, UpdatePlayerSoldPriceRequest request) {
+        TeamPlayerDetails teamPlayerDetails = teamPlayerDetailsRepository.findById(teamPlayerId)
+                .orElseThrow(() -> new ResourceNotFoundException("No team player details found for this match ID"));
+
+        // Update the specific player's sold price and status
+        if (teamPlayerDetails.getPlayersDtoMap().containsKey(request.getPlayerId())) {
+            TeamPlayerDetails.PlayersDto playerDto = teamPlayerDetails.getPlayersDtoMap().get(request.getPlayerId());
+            playerDto.setSoldPrice(request.getSoldPrice());
+            playerDto.setStatus("SOLD");
+            playerDto.setUserId(request.getUserId());
+            teamPlayerDetails.getPlayersDtoMap().put(request.getPlayerId(), playerDto);
+
+            teamPlayerDetailsRepository.save(teamPlayerDetails);
+        } else {
+            throw new ResourceNotFoundException("Player not found in this team");
+        }
+    }
     @Override
     public List<MatchPlayerDetailsResponse> getMatchTeamPlayers(UUID id) {
+        // Fetch match details
         MatchDetails matchDetails = matchDetailsRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No match details present with this ID"));
+
+        // Fetch all team player details for the given match
         List<TeamPlayerDetails> playerMatchDetails = teamPlayerDetailsRepository.findByMatchDetails(matchDetails);
 
         List<MatchPlayerDetailsResponse> matchPlayerDetailsResponses = new ArrayList<>();
 
-        for (TeamPlayerDetails teamPlayerDetails : playerMatchDetails){
+        for (TeamPlayerDetails teamPlayerDetails : playerMatchDetails) {
             MatchPlayerDetailsResponse matchPlayerDetailsResponse = new MatchPlayerDetailsResponse();
-            matchPlayerDetailsResponse.setId(matchDetails.getId());
+
+            matchPlayerDetailsResponse.setId(teamPlayerDetails.getId());  // Use TeamPlayerDetails ID
             matchPlayerDetailsResponse.setTeamName(teamPlayerDetails.getTeamName());
-            matchPlayerDetailsResponse.setMatchDetailsResponse(modelMapper.convertEntityToMatchDetailsResponse(teamPlayerDetails.getMatchDetails()));
-            matchPlayerDetailsResponse.setPlayerDetailsResponseList(
-                    teamPlayerDetails.getPlayers().stream().map(
-                            modelMapper :: convertEntityToPlayerDetailsResponse
-                    ).toList()
+
+            // Convert match details entity to response DTO
+            matchPlayerDetailsResponse.setMatchDetailsResponse(
+                    modelMapper.convertEntityToMatchDetailsResponse(teamPlayerDetails.getMatchDetails())
+            );
+
+            // Convert playersDtoMap properly
+            matchPlayerDetailsResponse.setPlayersDtoMap(
+                    teamPlayerDetails.getPlayersDtoMap().entrySet().stream()
+                            .collect(Collectors.toMap(
+                                    Map.Entry::getKey,
+                                    entry -> {
+                                        MatchPlayerDetailsResponse.PlayersDto dto = new MatchPlayerDetailsResponse.PlayersDto();
+                                        dto.setPlayerName(entry.getValue().getPlayerName());
+                                        dto.setStatus(entry.getValue().getStatus());
+                                        dto.setBasePrice(entry.getValue().getBasePrice());
+                                        dto.setSoldPrice(entry.getValue().getSoldPrice());
+                                        return dto;
+                                    }
+                            ))
             );
 
             matchPlayerDetailsResponses.add(matchPlayerDetailsResponse);
