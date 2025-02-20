@@ -9,7 +9,6 @@ import java.util.UUID;
 public class WinnerDetailsResponse {
     private UUID id;
     private String winnerName;
-    private MatchDetailsResponse matchDetails;
     private Double winnerAmount;
-    private PlayerDetailsResponse playerDetailsResponse;
+    private TeamPlayerDetailsResponse teamPlayerDetailsResponse;
 }

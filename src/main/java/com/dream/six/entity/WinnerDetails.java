@@ -21,9 +21,9 @@ public class WinnerDetails  extends BaseEntity{
     @Column(name = "WINNER_NAME")
     private String winnerName;
 
-    @JoinColumn(name = "MATCH_ID")
+    @JoinColumn(name = "TEAM_PLAYER_ID")
     @ManyToOne
-    private MatchDetails matchDetails;
+    private TeamPlayerDetails matchDetails;
 
     @Column(name = "WINNER_IMAGE")
     private byte[] winnerImage;

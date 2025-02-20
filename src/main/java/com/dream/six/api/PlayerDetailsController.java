@@ -5,8 +5,8 @@ import com.dream.six.vo.ApiResponse;
 import com.dream.six.vo.request.PlayerDetailsRequest;
 import com.dream.six.vo.request.TeamPlayerDetailsRequest;
 import com.dream.six.vo.request.UpdatePlayerSoldPriceRequest;
-import com.dream.six.vo.response.MatchPlayerDetailsResponse;
 import com.dream.six.vo.response.PlayerDetailsResponse;
+import com.dream.six.vo.response.TeamPlayerDetailsResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -89,18 +89,33 @@ public class PlayerDetailsController {
     }
 
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<List<MatchPlayerDetailsResponse>>> getMatchPlayers(@PathVariable UUID id) {
-        log.info("Received request to fetch match players for match ID: {}", id);
+    @GetMapping("/{matchId}/matchDetails")
+    public ResponseEntity<ApiResponse<List<TeamPlayerDetailsResponse>>> getTeamPlayerDetailsByMatch(@PathVariable UUID matchId) {
+        log.info("Received request to fetch match players for match ID: {}", matchId);
 
-        List<MatchPlayerDetailsResponse> playerDetailsResponseList = playerDetailsService.getMatchTeamPlayers(id);
+        List<TeamPlayerDetailsResponse> playerDetailsResponseList = playerDetailsService.getMatchTeamPlayers(matchId);
 
-        ApiResponse<List<MatchPlayerDetailsResponse>> apiResponse = ApiResponse.<List<MatchPlayerDetailsResponse>>builder()
+        ApiResponse<List<TeamPlayerDetailsResponse>> apiResponse = ApiResponse.<List<TeamPlayerDetailsResponse>>builder()
                 .data(playerDetailsResponseList)
                 .message("Match players fetched successfully")
                 .build();
 
         return ResponseEntity.ok(apiResponse);
     }
+
+    @GetMapping("/{teamPlayerId}")
+    public ResponseEntity<ApiResponse<TeamPlayerDetailsResponse>> getTeamPlayerDetailsById(@PathVariable UUID teamPlayerId) {
+        log.info("Received request to fetch match players for match ID: {}", teamPlayerId);
+
+        TeamPlayerDetailsResponse playerDetailsResponse = playerDetailsService.getTeamPlayerDetailsById(teamPlayerId);
+
+        ApiResponse<TeamPlayerDetailsResponse> apiResponse = ApiResponse.<TeamPlayerDetailsResponse>builder()
+                .data(playerDetailsResponse)
+                .message("Match players fetched successfully")
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
 
 }

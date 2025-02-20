@@ -1,7 +1,6 @@
 package com.dream.six.vo.request;
 
 import lombok.Data;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 

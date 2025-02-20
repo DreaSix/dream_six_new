@@ -1,15 +1,20 @@
 package com.dream.six.mapper;
 
 
-import com.dream.six.entity.MatchDetails;
-import com.dream.six.entity.PlayerDetails;
+import com.dream.six.constants.ErrorMessageConstants;
+import com.dream.six.entity.*;
+import com.dream.six.exception.ResourceNotFoundException;
 import com.dream.six.repository.UserInfoRepository;
 import com.dream.six.vo.response.MatchDetailsResponse;
 import com.dream.six.vo.response.PlayerDetailsResponse;
+import com.dream.six.vo.response.TeamPlayerDetailsResponse;
+import com.dream.six.vo.response.WinnerDetailsResponse;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.dream.six.mapper.CommonMapper.mapper;
 
 @Component
 public class ModelMapper {
@@ -48,5 +53,60 @@ public class ModelMapper {
         response.setBasePrice(player.getBasePrice());
         return response;
     }
+
+    public TeamPlayerDetailsResponse convertToTeamPlayerDetailsResponse(TeamPlayerDetails teamPlayerDetails) {
+        TeamPlayerDetailsResponse response = new TeamPlayerDetailsResponse();
+
+        response.setId(teamPlayerDetails.getId()); // Use TeamPlayerDetails ID
+        response.setTeamName(teamPlayerDetails.getTeamName());
+
+        // Convert MatchDetails entity to response DTO
+        response.setMatchDetailsResponse(this.convertEntityToMatchDetailsResponse(teamPlayerDetails.getMatchDetails()));
+
+        // Convert PlayersDtoMap properly
+        response.setPlayersDtoMap(teamPlayerDetails.getPlayersDtoMap().entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> mapToPlayersDto(entry.getValue())
+                ))
+        );
+
+        return response;
+    }
+
+    /**
+     * Maps PlayersDto entity to MatchPlayerDetailsResponse.PlayersDto DTO.
+     */
+    public TeamPlayerDetailsResponse.PlayersDto mapToPlayersDto(TeamPlayerDetails.PlayersDto playerEntity) {
+        TeamPlayerDetailsResponse.PlayersDto dto = new TeamPlayerDetailsResponse.PlayersDto();
+        dto.setPlayerName(playerEntity.getPlayerName());
+        dto.setStatus(playerEntity.getStatus());
+        dto.setBasePrice(playerEntity.getBasePrice());
+        dto.setSoldPrice(playerEntity.getSoldPrice());
+        UserInfoEntity userInfo =userInfoRepository.findById(playerEntity.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException(String.format(ErrorMessageConstants.RESOURCE_WITH_ID_NOT_FOUND, ErrorMessageConstants.USER_NOT_FOUND, playerEntity.getUserId())));
+        dto.setUserResponseVO(mapper.convertUserInfoEntityToUserResponse(userInfo));
+        return dto;
+    }
+
+
+    /**
+     * Converts WinnerDetails entity to WinnerDetailsResponse DTO.
+     */
+    public WinnerDetailsResponse convertToWinnerDetailsResponse(WinnerDetails winnerDetails) {
+        WinnerDetailsResponse response = new WinnerDetailsResponse();
+
+        response.setId(winnerDetails.getId());
+        response.setWinnerName(winnerDetails.getWinnerName());
+        response.setWinnerAmount(winnerDetails.getWinnerAmount());
+
+        // Convert TeamPlayerDetails to response DTO
+        if (winnerDetails.getMatchDetails() != null) {
+            response.setTeamPlayerDetailsResponse(this.convertToTeamPlayerDetailsResponse(winnerDetails.getMatchDetails()));
+        }
+
+        return response;
+    }
+
 
 }

@@ -13,10 +13,9 @@ import com.dream.six.service.PlayerDetailsService;
 import com.dream.six.vo.request.PlayerDetailsRequest;
 import com.dream.six.vo.request.TeamPlayerDetailsRequest;
 import com.dream.six.vo.request.UpdatePlayerSoldPriceRequest;
-import com.dream.six.vo.response.MatchPlayerDetailsResponse;
 import com.dream.six.vo.response.PlayerDetailsResponse;
+import com.dream.six.vo.response.TeamPlayerDetailsResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -141,7 +140,7 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
         }
     }
     @Override
-    public List<MatchPlayerDetailsResponse> getMatchTeamPlayers(UUID id) {
+    public List<TeamPlayerDetailsResponse> getMatchTeamPlayers(UUID id) {
         // Fetch match details
         MatchDetails matchDetails = matchDetailsRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No match details present with this ID"));
@@ -149,39 +148,18 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
         // Fetch all team player details for the given match
         List<TeamPlayerDetails> playerMatchDetails = teamPlayerDetailsRepository.findByMatchDetails(matchDetails);
 
-        List<MatchPlayerDetailsResponse> matchPlayerDetailsResponses = new ArrayList<>();
+        return playerMatchDetails.stream().map(
+                modelMapper::convertToTeamPlayerDetailsResponse
+        ).toList();
 
-        for (TeamPlayerDetails teamPlayerDetails : playerMatchDetails) {
-            MatchPlayerDetailsResponse matchPlayerDetailsResponse = new MatchPlayerDetailsResponse();
+            }
 
-            matchPlayerDetailsResponse.setId(teamPlayerDetails.getId());  // Use TeamPlayerDetails ID
-            matchPlayerDetailsResponse.setTeamName(teamPlayerDetails.getTeamName());
+    @Override
+    public TeamPlayerDetailsResponse getTeamPlayerDetailsById(UUID teamPlayerId) {
+        TeamPlayerDetails teamPlayerDetails = teamPlayerDetailsRepository.findById(teamPlayerId)
+                .orElseThrow(() -> new ResourceNotFoundException("No team player details found for this match ID"));
 
-            // Convert match details entity to response DTO
-            matchPlayerDetailsResponse.setMatchDetailsResponse(
-                    modelMapper.convertEntityToMatchDetailsResponse(teamPlayerDetails.getMatchDetails())
-            );
-
-            // Convert playersDtoMap properly
-            matchPlayerDetailsResponse.setPlayersDtoMap(
-                    teamPlayerDetails.getPlayersDtoMap().entrySet().stream()
-                            .collect(Collectors.toMap(
-                                    Map.Entry::getKey,
-                                    entry -> {
-                                        MatchPlayerDetailsResponse.PlayersDto dto = new MatchPlayerDetailsResponse.PlayersDto();
-                                        dto.setPlayerName(entry.getValue().getPlayerName());
-                                        dto.setStatus(entry.getValue().getStatus());
-                                        dto.setBasePrice(entry.getValue().getBasePrice());
-                                        dto.setSoldPrice(entry.getValue().getSoldPrice());
-                                        return dto;
-                                    }
-                            ))
-            );
-
-            matchPlayerDetailsResponses.add(matchPlayerDetailsResponse);
-        }
-
-        return matchPlayerDetailsResponses;
+        return modelMapper.convertToTeamPlayerDetailsResponse(teamPlayerDetails);
     }
 
 

@@ -2,11 +2,13 @@ package com.dream.six.service.impl;
 
 import com.dream.six.entity.MatchDetails;
 import com.dream.six.entity.PlayerDetails;
+import com.dream.six.entity.TeamPlayerDetails;
 import com.dream.six.entity.WinnerDetails;
 import com.dream.six.exception.ResourceNotFoundException;
 import com.dream.six.mapper.ModelMapper;
 import com.dream.six.repository.MatchDetailsRepository;
 import com.dream.six.repository.PlayerDetailsRepository;
+import com.dream.six.repository.TeamPlayerDetailsRepository;
 import com.dream.six.repository.WinnerDetailsRepository;
 import com.dream.six.service.WinnerDetailsService;
 import com.dream.six.vo.request.WinnerDetailsRequest;
@@ -28,15 +30,16 @@ public class WinnerDetailsServiceImpl implements WinnerDetailsService {
     private final MatchDetailsRepository matchDetailsRepository;
     private final PlayerDetailsRepository playerDetailsRepository;
     private final WinnerDetailsRepository winnerDetailsRepository;
+    private final TeamPlayerDetailsRepository teamPlayerDetailsRepository;
     private final ModelMapper modelMapper;
 
 
     @Override
     public void createWinner(WinnerDetailsRequest request) throws Exception {
-        MatchDetails matchDetails = matchDetailsRepository.findById(request.getMatchId())
-                .orElseThrow(() -> new ResourceNotFoundException("Match details not found with ID: " + request.getMatchId()));
+        TeamPlayerDetails teamPlayerDetails = teamPlayerDetailsRepository.findById(request.getMatchId())
+                .orElseThrow(() -> new ResourceNotFoundException("TeamPlayerDetails details not found with ID: " + request.getMatchId()));
 
-        WinnerDetails winnerDetails = buildWinnerDetails(request, matchDetails);
+        WinnerDetails winnerDetails = buildWinnerDetails(request, teamPlayerDetails);
         winnerDetailsRepository.save(winnerDetails);
     }
 
@@ -45,36 +48,25 @@ public class WinnerDetailsServiceImpl implements WinnerDetailsService {
         LocalDate today = LocalDate.now();
         LocalDate yesterday = today.minusDays(1);
 
-        // Convert to Timestamp for database comparison
+        // Convert LocalDate to Timestamp for database query
         Timestamp startOfYesterday = Timestamp.valueOf(yesterday.atStartOfDay());
-        Timestamp endOfToday = Timestamp.valueOf(today.plusDays(1).atStartOfDay().minusSeconds(1));
+        Timestamp endOfToday = Timestamp.valueOf(today.atStartOfDay().plusDays(1).minusSeconds(1));
 
+        // Fetch winner details within the date range
         List<WinnerDetails> winnerDetailsList = winnerDetailsRepository.findByCreatedAtBetween(startOfYesterday, endOfToday);
-        List<WinnerDetailsResponse> winnerDetailsResponseList = new ArrayList<>();
 
-        List<MatchDetails> matchDetails = matchDetailsRepository.findAll();
-
-        for (WinnerDetails winnerDetails: winnerDetailsList){
-            WinnerDetailsResponse winnerDetailsResponse = new WinnerDetailsResponse();
-            MatchDetails matchDetails1 = matchDetails.stream().filter(match -> match.getId().equals(winnerDetails.getMatchDetails().getId())).findFirst().get();
-            winnerDetailsResponse.setId(winnerDetails.getId());
-            winnerDetailsResponse.setWinnerAmount(winnerDetails.getWinnerAmount());
-            winnerDetailsResponse.setWinnerName(winnerDetails.getWinnerName());
-            winnerDetailsResponse.setMatchDetails(modelMapper.convertEntityToMatchDetailsResponse(matchDetails1));
-
-            winnerDetailsResponseList.add(winnerDetailsResponse);
-
-        }
-
-        return winnerDetailsResponseList;
+        // Map WinnerDetails to WinnerDetailsResponse
+        return winnerDetailsList.stream()
+                .map(modelMapper::convertToWinnerDetailsResponse)
+                .toList();
     }
 
 
-    private WinnerDetails buildWinnerDetails(WinnerDetailsRequest request, MatchDetails matchDetails) throws IOException {
+    private WinnerDetails buildWinnerDetails(WinnerDetailsRequest request, TeamPlayerDetails teamPlayerDetails) throws IOException {
         WinnerDetails winnerDetails = new WinnerDetails();
         winnerDetails.setWinnerName(request.getWinnerName());
         winnerDetails.setWinnerAmount(request.getWinnerAmount());
-        winnerDetails.setMatchDetails(matchDetails);
+        winnerDetails.setMatchDetails(teamPlayerDetails);
         return winnerDetails;
     }
 }
