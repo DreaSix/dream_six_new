@@ -83,7 +83,7 @@ public class MessageService {
         return bidResponseDTO;
     }
 
-    public BidResponseDTO saveMessage(UUID bidId, String username, UUID userId, String messageContent) {
+    public BidResponseDTO saveMessage(UUID bidId,  UUID userId,String username, String messageContent) {
         // Retrieve the existing bid entity
         BidEntity existingBid = bidRepository.findById(bidId)
                 .orElseThrow(() -> new RuntimeException("No bid exists for bidId: " + bidId));

@@ -18,6 +18,7 @@ public class TeamPlayerDetailsResponse {
         private UUID playerId;
         private String playerName;
         private String playerImage;
+        private UUID bidId;
         private String status;
         private Double basePrice;
         private Double soldPrice;

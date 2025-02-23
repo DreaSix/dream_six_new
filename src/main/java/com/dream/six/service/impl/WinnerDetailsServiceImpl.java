@@ -30,6 +30,7 @@ public class WinnerDetailsServiceImpl implements WinnerDetailsService {
     private final TeamPlayerDetailsRepository teamPlayerDetailsRepository;
     private final WalletRepository walletRepository;
     private final ModelMapper modelMapper;
+    private final BidRepository bidRepository;
 
 
     @Override
@@ -55,10 +56,11 @@ public class WinnerDetailsServiceImpl implements WinnerDetailsService {
         // Fetch winner details within the date range
         List<WinnerDetails> winnerDetailsList = winnerDetailsRepository.findByCreatedAtBetween(startOfYesterday, endOfToday);
 
+        List<BidEntity> bidEntities = bidRepository.findAll();
         // Map WinnerDetails to WinnerDetailsResponse
         return winnerDetailsList.stream()
                 .map(winnerDetails -> {
-                    return modelMapper.convertToWinnerDetailsResponse(winnerDetails, playerDetails);
+                    return modelMapper.convertToWinnerDetailsResponse(winnerDetails, playerDetails, bidEntities);
                 })
                 .toList();
     }

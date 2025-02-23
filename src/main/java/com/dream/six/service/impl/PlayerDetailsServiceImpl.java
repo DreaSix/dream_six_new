@@ -1,16 +1,10 @@
 package com.dream.six.service.impl;
 
-import com.dream.six.entity.MatchDetails;
-import com.dream.six.entity.PlayerDetails;
-import com.dream.six.entity.TeamPlayerDetails;
-import com.dream.six.entity.WalletEntity;
+import com.dream.six.entity.*;
 import com.dream.six.enums.PlayerStatus;
 import com.dream.six.exception.ResourceNotFoundException;
 import com.dream.six.mapper.ModelMapper;
-import com.dream.six.repository.MatchDetailsRepository;
-import com.dream.six.repository.PlayerDetailsRepository;
-import com.dream.six.repository.TeamPlayerDetailsRepository;
-import com.dream.six.repository.WalletRepository;
+import com.dream.six.repository.*;
 import com.dream.six.service.PlayerDetailsService;
 import com.dream.six.vo.request.PlayerDetailsRequest;
 import com.dream.six.vo.request.TeamPlayerDetailsRequest;
@@ -38,6 +32,7 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
     private final TeamPlayerDetailsRepository teamPlayerDetailsRepository;
     private  final WalletRepository walletRepository;
     private final ModelMapper modelMapper;
+    private final BidRepository bidRepository;
 
     @Override
     public void savePlayerDetails(PlayerDetailsRequest playerDetailsRequest) throws IOException {
@@ -171,10 +166,10 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
 
         // Fetch all team player details for the given match
         List<TeamPlayerDetails> playerMatchDetails = teamPlayerDetailsRepository.findByMatchDetails(matchDetails);
-
+        List<BidEntity> bidDetails = bidRepository.findAll();
         List<PlayerDetails> playerDetailsList = playerDetailsRepository.findAll();
         return playerMatchDetails.stream().map(details -> {
-            TeamPlayerDetailsResponse teamPlayerDetailsResponse = modelMapper.convertToTeamPlayerDetailsResponse(details, playerDetailsList);
+            TeamPlayerDetailsResponse teamPlayerDetailsResponse = modelMapper.convertToTeamPlayerDetailsResponse(details, playerDetailsList, bidDetails);
             return teamPlayerDetailsResponse;
         }).toList();
 
@@ -183,10 +178,12 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
     @Override
     public TeamPlayerDetailsResponse getTeamPlayerDetailsById(UUID teamPlayerId) {
         List<PlayerDetails> playerDetailsList = playerDetailsRepository.findAll();
+        List<BidEntity> bidDetails = bidRepository.findAll();
+
         TeamPlayerDetails teamPlayerDetails = teamPlayerDetailsRepository.findById(teamPlayerId)
                 .orElseThrow(() -> new ResourceNotFoundException("No team player details found for this match ID"));
 
-        return modelMapper.convertToTeamPlayerDetailsResponse(teamPlayerDetails, playerDetailsList);
+        return modelMapper.convertToTeamPlayerDetailsResponse(teamPlayerDetails, playerDetailsList, bidDetails);
     }
 
 

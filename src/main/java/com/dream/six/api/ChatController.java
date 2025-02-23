@@ -59,6 +59,6 @@ public class ChatController {
         private UUID bidId;
         private String messageContent;
         private String username;
-        private String userId;
+        private UUID userId;
     }
 }

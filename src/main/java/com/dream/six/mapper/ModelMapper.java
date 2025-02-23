@@ -55,7 +55,7 @@ public class ModelMapper {
     }
 
     public TeamPlayerDetailsResponse convertToTeamPlayerDetailsResponse(
-            TeamPlayerDetails teamPlayerDetails, List<PlayerDetails> playerDetailsList) {
+            TeamPlayerDetails teamPlayerDetails, List<PlayerDetails> playerDetailsList, List<BidEntity> bidEntities) {
 
         TeamPlayerDetailsResponse response = new TeamPlayerDetailsResponse();
 
@@ -67,17 +67,27 @@ public class ModelMapper {
                 this.convertEntityToMatchDetailsResponse(teamPlayerDetails.getMatchDetails())
         );
 
-        // Convert PlayersDtoMap properly with player details check
+        // Convert PlayersDtoMap properly with player details check & bidEntity
         response.setPlayersDtoMap(teamPlayerDetails.getPlayersDtoMap().entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         entry -> {
+                            UUID playerId = entry.getKey();  // Get player ID
+                            TeamPlayerDetails.PlayersDto playerDto = entry.getValue();
+
+                            // Find matching player details
                             PlayerDetails matchingPlayer = playerDetailsList.stream()
-                                    .filter(player -> player.getPlayerName().equals(entry.getValue().getPlayerName()))
+                                    .filter(player -> player.getPlayerName().equals(playerDto.getPlayerName()))
                                     .findFirst()
                                     .orElse(null);
 
-                            return mapToPlayersDto(entry.getValue(), matchingPlayer);
+                            // Find matching bid entity by playerId
+                            BidEntity matchingBid = bidEntities.stream()
+                                    .filter(bid -> bid.getPlayerId().equals(playerId))
+                                    .findFirst()
+                                    .orElse(null);
+
+                            return mapToPlayersDto(playerDto, matchingPlayer, matchingBid);
                         }
                 ))
         );
@@ -86,10 +96,11 @@ public class ModelMapper {
     }
 
 
+
     /**
      * Maps PlayersDto entity to MatchPlayerDetailsResponse.PlayersDto DTO.
      */
-    public TeamPlayerDetailsResponse.PlayersDto mapToPlayersDto(TeamPlayerDetails.PlayersDto playerEntity, PlayerDetails playerDetails) {
+    public TeamPlayerDetailsResponse.PlayersDto mapToPlayersDto(TeamPlayerDetails.PlayersDto playerEntity, PlayerDetails playerDetails, BidEntity bidEntity) {
         TeamPlayerDetailsResponse.PlayersDto dto = new TeamPlayerDetailsResponse.PlayersDto();
         dto.setPlayerName(playerEntity.getPlayerName());
         dto.setStatus(playerEntity.getStatus());
@@ -101,6 +112,9 @@ public class ModelMapper {
         dto.setPlayerId(playerDetails.getId());
         dto.setBasePrice(playerEntity.getBasePrice());
         dto.setSoldPrice(playerEntity.getSoldPrice());
+        if (bidEntity != null && !bidEntity.isDeleted()){
+            dto.setBidId(bidEntity.getId());
+        }
 //        UserInfoEntity userInfo =userInfoRepository.findById(playerEntity.getUserId())
 //                .orElseThrow(() -> new ResourceNotFoundException(String.format(ErrorMessageConstants.RESOURCE_WITH_ID_NOT_FOUND, ErrorMessageConstants.USER_NOT_FOUND, playerEntity.getUserId())));
 //        dto.setUserResponseVO(mapper.convertUserInfoEntityToUserResponse(userInfo));
@@ -111,7 +125,7 @@ public class ModelMapper {
     /**
      * Converts WinnerDetails entity to WinnerDetailsResponse DTO.
      */
-    public WinnerDetailsResponse convertToWinnerDetailsResponse(WinnerDetails winnerDetails, List<PlayerDetails> playerDetails) {
+    public WinnerDetailsResponse convertToWinnerDetailsResponse(WinnerDetails winnerDetails, List<PlayerDetails> playerDetails, List<BidEntity> bidEntities) {
         WinnerDetailsResponse response = new WinnerDetailsResponse();
 
         response.setId(winnerDetails.getId());
@@ -120,7 +134,7 @@ public class ModelMapper {
 
         // Convert TeamPlayerDetails to response DTO
         if (winnerDetails.getMatchDetails() != null) {
-            response.setTeamPlayerDetailsResponse(this.convertToTeamPlayerDetailsResponse(winnerDetails.getMatchDetails(), playerDetails));
+            response.setTeamPlayerDetailsResponse(this.convertToTeamPlayerDetailsResponse(winnerDetails.getMatchDetails(), playerDetails, bidEntities));
         }
 
         return response;
