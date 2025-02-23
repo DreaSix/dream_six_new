@@ -15,10 +15,12 @@ public class TeamPlayerDetailsResponse {
 
     @Data
     public static class PlayersDto {
+        private UUID playerId;
         private String playerName;
+        private String playerImage;
         private String status;
         private Double basePrice;
         private Double soldPrice;
-        private UserResponseVO userResponseVO;
+//        private UserResponseVO userResponseVO;
     }
 }

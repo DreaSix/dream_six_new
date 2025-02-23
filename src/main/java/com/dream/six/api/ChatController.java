@@ -26,7 +26,7 @@ public class ChatController {
     }
 
     @PostMapping("/createBid")
-    public BidResponseDTO createBid(@RequestParam UUID matchId, @RequestParam UUID playerId) {
+    public BidResponseDTO createBid(@RequestParam UUID matchId, @RequestParam UUID playerId) throws Exception {
         log.info("Creating bid for matchId: {} and playerId: {}", matchId, playerId);
         return messageService.createBid(matchId, playerId);
     }

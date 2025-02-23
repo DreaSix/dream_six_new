@@ -48,6 +48,8 @@ public class WinnerDetailsServiceImpl implements WinnerDetailsService {
         LocalDate today = LocalDate.now();
         LocalDate yesterday = today.minusDays(1);
 
+        List<PlayerDetails> playerDetails = playerDetailsRepository.findAll();
+
         // Convert LocalDate to Timestamp for database query
         Timestamp startOfYesterday = Timestamp.valueOf(yesterday.atStartOfDay());
         Timestamp endOfToday = Timestamp.valueOf(today.atStartOfDay().plusDays(1).minusSeconds(1));
@@ -57,7 +59,9 @@ public class WinnerDetailsServiceImpl implements WinnerDetailsService {
 
         // Map WinnerDetails to WinnerDetailsResponse
         return winnerDetailsList.stream()
-                .map(modelMapper::convertToWinnerDetailsResponse)
+                .map(winnerDetails -> {
+                    return modelMapper.convertToWinnerDetailsResponse(winnerDetails, playerDetails);
+                })
                 .toList();
     }
 
