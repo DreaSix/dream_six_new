@@ -36,7 +36,7 @@ public class ChatController {
         log.info("Received message: {} for bidId: {}", request.getMessageContent(), request.getBidId());
 
         // Save message
-        BidResponseDTO response = messageService.saveMessage(request.getBidId(), request.getUsername(), request.getMessageContent());
+        BidResponseDTO response = messageService.saveMessage(request.getBidId(), request.userId, request.getUsername(), request.getMessageContent());
 
         // Broadcast to all users
         simpMessagingTemplate.convertAndSend("/topic/public", response);
@@ -58,6 +58,7 @@ public class ChatController {
     public static class BidMessageRequest {
         private UUID bidId;
         private String messageContent;
-        private String username; // Added username to fix MDC issue
+        private String username;
+        private String userId;
     }
 }

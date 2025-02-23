@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @EqualsAndHashCode(callSuper = true)
@@ -18,8 +19,8 @@ public class WinnerDetails  extends BaseEntity{
     private UUID id;
 
 
-    @Column(name = "WINNER_NAME")
-    private String winnerName;
+    @Column(name = "WINNER")
+    private UserInfoEntity winner;
 
     @JoinColumn(name = "TEAM_PLAYER_ID")
     @ManyToOne
@@ -29,8 +30,5 @@ public class WinnerDetails  extends BaseEntity{
     private byte[] winnerImage;
 
     @Column(name = "WINNER_AMOUNT")
-    private Double winnerAmount;
-
-
-
+    private BigDecimal winnerAmount;
 }

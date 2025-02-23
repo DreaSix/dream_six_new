@@ -1,6 +1,5 @@
 package com.dream.six.entity;
 
-import com.amazonaws.services.codepipeline.model.ApprovalStatus;
 import com.dream.six.enums.Status;
 import com.dream.six.enums.TransactionType;
 import jakarta.persistence.*;

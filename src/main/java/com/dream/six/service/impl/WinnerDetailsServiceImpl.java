@@ -1,15 +1,10 @@
 package com.dream.six.service.impl;
 
-import com.dream.six.entity.MatchDetails;
-import com.dream.six.entity.PlayerDetails;
-import com.dream.six.entity.TeamPlayerDetails;
-import com.dream.six.entity.WinnerDetails;
+import com.dream.six.constants.ErrorMessageConstants;
+import com.dream.six.entity.*;
 import com.dream.six.exception.ResourceNotFoundException;
 import com.dream.six.mapper.ModelMapper;
-import com.dream.six.repository.MatchDetailsRepository;
-import com.dream.six.repository.PlayerDetailsRepository;
-import com.dream.six.repository.TeamPlayerDetailsRepository;
-import com.dream.six.repository.WinnerDetailsRepository;
+import com.dream.six.repository.*;
 import com.dream.six.service.WinnerDetailsService;
 import com.dream.six.vo.request.WinnerDetailsRequest;
 import com.dream.six.vo.response.MatchDetailsResponse;
@@ -22,6 +17,7 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +26,9 @@ public class WinnerDetailsServiceImpl implements WinnerDetailsService {
     private final MatchDetailsRepository matchDetailsRepository;
     private final PlayerDetailsRepository playerDetailsRepository;
     private final WinnerDetailsRepository winnerDetailsRepository;
+    private final UserInfoRepository userInfoRepository;
     private final TeamPlayerDetailsRepository teamPlayerDetailsRepository;
+    private final WalletRepository walletRepository;
     private final ModelMapper modelMapper;
 
 
@@ -64,7 +62,14 @@ public class WinnerDetailsServiceImpl implements WinnerDetailsService {
 
     private WinnerDetails buildWinnerDetails(WinnerDetailsRequest request, TeamPlayerDetails teamPlayerDetails) throws IOException {
         WinnerDetails winnerDetails = new WinnerDetails();
-        winnerDetails.setWinnerName(request.getWinnerName());
+        UserInfoEntity userInfo = userInfoRepository.findByIdAndIsDeletedFalse(request.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException(String.format(ErrorMessageConstants.RESOURCE_WITH_ID_NOT_FOUND, ErrorMessageConstants.USER_NOT_FOUND, request.getUserId())));
+        Optional<WalletEntity> optionalWalletEntity = walletRepository.findByCreatedByUUID(request.getUserId());
+        if(optionalWalletEntity.isPresent()){
+            WalletEntity walletEntity = optionalWalletEntity.get();
+            walletEntity.setBalance(walletEntity.getBalance().add(request.getWinnerAmount()));
+        }
+        winnerDetails.setWinner(userInfo);
         winnerDetails.setWinnerAmount(request.getWinnerAmount());
         winnerDetails.setMatchDetails(teamPlayerDetails);
         return winnerDetails;

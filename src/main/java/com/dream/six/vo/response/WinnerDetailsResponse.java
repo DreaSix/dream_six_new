@@ -3,12 +3,13 @@ package com.dream.six.vo.response;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Data
 public class WinnerDetailsResponse {
     private UUID id;
-    private String winnerName;
-    private Double winnerAmount;
+    private UserResponseVO winnerName;
+    private BigDecimal winnerAmount;
     private TeamPlayerDetailsResponse teamPlayerDetailsResponse;
 }

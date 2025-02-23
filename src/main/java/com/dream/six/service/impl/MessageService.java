@@ -3,9 +3,11 @@ package com.dream.six.service.impl;
 import com.dream.six.entity.BidEntity;
 import com.dream.six.entity.MessageDetails;
 import com.dream.six.entity.UserInfoEntity;
+import com.dream.six.entity.WalletEntity;
 import com.dream.six.repository.BidRepository;
 import com.dream.six.repository.MessageRepository;
 import com.dream.six.repository.UserInfoRepository;
+import com.dream.six.repository.WalletRepository;
 import com.dream.six.vo.response.BidResponseDTO;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -14,9 +16,11 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -28,6 +32,7 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final UserInfoRepository userInfoRepository;
+    private final WalletRepository walletRepository;
 
     @Transactional
     public BidResponseDTO createBid(UUID matchId, UUID playerId) {
@@ -53,14 +58,21 @@ public class MessageService {
         return bidResponseDTO;
     }
 
-    public BidResponseDTO saveMessage(UUID bidId, String username, String messageContent) {
-        BidEntity existingBid = bidRepository.findById(bidId).orElseThrow(
-                () -> new RuntimeException("No bid exists for bidId: " + bidId));
+    public BidResponseDTO saveMessage(UUID bidId, String username, UUID userId, String messageContent) {
+        // Retrieve the existing bid entity
+        BidEntity existingBid = bidRepository.findById(bidId)
+                .orElseThrow(() -> new RuntimeException("No bid exists for bidId: " + bidId));
 
-        List<UserInfoEntity> userInfoEntities = userInfoRepository.findAll();
+        // Fetch user information
+        UserInfoEntity userInfoEntity = userInfoRepository.findByUserNameAndIsDeletedFalse(username)
+                .orElseThrow(() -> new RuntimeException("User not found: " + username));
 
-        UserInfoEntity userInfoEntity = userInfoEntities.stream().filter(user -> Objects.equals(user.getUsername(), username)).findFirst().get();
+        // Check if user is a regular user and validate wallet balance
+        if (isUserRole(userInfoEntity)) {
+            validateWalletBalance(userId, messageContent);
+        }
 
+        // Create and save message detail
         MessageDetails messageDetail = new MessageDetails();
         messageDetail.setName(userInfoEntity.getName());
         messageDetail.setBid(existingBid);
@@ -70,31 +82,69 @@ public class MessageService {
 
         messageRepository.save(messageDetail);
 
-
+        // Send message to websocket
         messagingTemplate.convertAndSend("/topic/messages/" + bidId, messageDetail);
-        List<MessageDetails> messageDetailsList = messageRepository.findByBidId(existingBid.getId());
 
-        List<BidResponseDTO.MessageResponseDTO> messageResponseDTOList = messageDetailsList.stream()
-                .map(messageDetails -> {
-                    BidResponseDTO.MessageResponseDTO messageResponseDTO = new BidResponseDTO.MessageResponseDTO();
-                    messageResponseDTO.setId(messageDetails.getId());
-                    messageResponseDTO.setMessage(messageDetails.getMessage());
-                    messageResponseDTO.setUsername(messageDetails.getUsername());
-                    messageResponseDTO.setName(messageDetails.getName());
-                    messageResponseDTO.setTimestamp(messageDetails.getTimestamp());
-                    return messageResponseDTO;
-                })
+        // Retrieve and map messages for response
+        List<BidResponseDTO.MessageResponseDTO> messageResponseDTOList = messageRepository.findByBidId(existingBid.getId())
+                .stream()
+                .map(this::mapToMessageResponseDTO)
                 .toList();
 
+        // Create final bid response DTO
+        return buildBidResponse(existingBid, messageResponseDTOList);
+    }
+
+    // Helper method to check if the user has "USER" role
+    private boolean isUserRole(UserInfoEntity userInfoEntity) {
+        return userInfoEntity.getRoles() != null && userInfoEntity.getRoles().contains("USER");
+    }
+
+    // Helper method to validate wallet balance
+    private void validateWalletBalance(UUID userId, String messageContent) {
+        Optional<WalletEntity> optionalWalletEntity = walletRepository.findByCreatedByUUID(userId);
+        WalletEntity walletEntity = optionalWalletEntity
+                .orElseThrow(() -> new RuntimeException("No wallet found for userId: " + userId));
+
+        BigDecimal amount = extractAmountFromMessage(messageContent);
+        if (amount != null && amount.compareTo(walletEntity.getBalance()) > 0) {
+            throw new RuntimeException("Insufficient balance. Available: " + walletEntity.getBalance() + ", Requested: " + amount);
+        }
+    }
+
+    // Helper method to extract amount from message content
+    private BigDecimal extractAmountFromMessage(String messageContent) {
+        if (messageContent != null && messageContent.contains("amount:")) {
+            try {
+                String amountStr = messageContent.substring(messageContent.indexOf("amount:") + 7).trim();
+                return new BigDecimal(amountStr);
+            } catch (NumberFormatException e) {
+                throw new RuntimeException("Invalid amount format in message content");
+            }
+        }
+        return null;
+    }
+
+    // Helper method to map MessageDetails to MessageResponseDTO
+    private BidResponseDTO.MessageResponseDTO mapToMessageResponseDTO(MessageDetails messageDetails) {
+        BidResponseDTO.MessageResponseDTO messageResponseDTO = new BidResponseDTO.MessageResponseDTO();
+        messageResponseDTO.setId(messageDetails.getId());
+        messageResponseDTO.setMessage(messageDetails.getMessage());
+        messageResponseDTO.setUsername(messageDetails.getUsername());
+        messageResponseDTO.setName(messageDetails.getName());
+        messageResponseDTO.setTimestamp(messageDetails.getTimestamp());
+        return messageResponseDTO;
+    }
+
+    // Helper method to build BidResponseDTO
+    private BidResponseDTO buildBidResponse(BidEntity existingBid, List<BidResponseDTO.MessageResponseDTO> messageResponseDTOList) {
         BidResponseDTO bidResponseDTO = new BidResponseDTO();
         bidResponseDTO.setId(existingBid.getId());
         bidResponseDTO.setMatchId(existingBid.getMatchId());
         bidResponseDTO.setPlayerId(existingBid.getPlayerId());
         bidResponseDTO.setResponseDTOList(messageResponseDTOList);
-
         return bidResponseDTO;
-
-          }
+    }
 
     @Transactional
     public BidResponseDTO getMessages(UUID bidId) {

@@ -3,12 +3,14 @@ package com.dream.six.service.impl;
 import com.dream.six.entity.MatchDetails;
 import com.dream.six.entity.PlayerDetails;
 import com.dream.six.entity.TeamPlayerDetails;
+import com.dream.six.entity.WalletEntity;
 import com.dream.six.enums.PlayerStatus;
 import com.dream.six.exception.ResourceNotFoundException;
 import com.dream.six.mapper.ModelMapper;
 import com.dream.six.repository.MatchDetailsRepository;
 import com.dream.six.repository.PlayerDetailsRepository;
 import com.dream.six.repository.TeamPlayerDetailsRepository;
+import com.dream.six.repository.WalletRepository;
 import com.dream.six.service.PlayerDetailsService;
 import com.dream.six.vo.request.PlayerDetailsRequest;
 import com.dream.six.vo.request.TeamPlayerDetailsRequest;
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -33,6 +36,7 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
     private final MatchDetailsRepository matchDetailsRepository;
 
     private final TeamPlayerDetailsRepository teamPlayerDetailsRepository;
+    private  final WalletRepository walletRepository;
     private final ModelMapper modelMapper;
 
     @Override
@@ -122,23 +126,43 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
     }
 
     @Transactional
+    @Override
     public void updateSoldPrice(UUID teamPlayerId, UpdatePlayerSoldPriceRequest request) {
+        // Fetch team player details
         TeamPlayerDetails teamPlayerDetails = teamPlayerDetailsRepository.findById(teamPlayerId)
-                .orElseThrow(() -> new ResourceNotFoundException("No team player details found for this match ID"));
+                .orElseThrow(() -> new ResourceNotFoundException("No team player details found for teamPlayerId: " + teamPlayerId));
 
-        // Update the specific player's sold price and status
-        if (teamPlayerDetails.getPlayersDtoMap().containsKey(request.getPlayerId())) {
-            TeamPlayerDetails.PlayersDto playerDto = teamPlayerDetails.getPlayersDtoMap().get(request.getPlayerId());
-            playerDto.setSoldPrice(request.getSoldPrice());
-            playerDto.setStatus("SOLD");
-            playerDto.setUserId(request.getUserId());
-            teamPlayerDetails.getPlayersDtoMap().put(request.getPlayerId(), playerDto);
-
-            teamPlayerDetailsRepository.save(teamPlayerDetails);
-        } else {
-            throw new ResourceNotFoundException("Player not found in this team");
+        // Validate if player exists in the team
+        TeamPlayerDetails.PlayersDto playerDto = teamPlayerDetails.getPlayersDtoMap().get(request.getPlayerId());
+        if (playerDto == null) {
+            throw new ResourceNotFoundException("Player with ID " + request.getPlayerId() + " not found in the team.");
         }
+
+        // Fetch user wallet
+        WalletEntity walletEntity = walletRepository.findByCreatedByUUID(request.getUserId())
+                .orElseThrow(() -> new RuntimeException("No wallet found for userId: " + request.getUserId()));
+
+        // Validate wallet balance
+        BigDecimal soldPrice = BigDecimal.valueOf(request.getSoldPrice());
+        if (walletEntity.getBalance().compareTo(soldPrice) < 0) {
+            throw new RuntimeException("Insufficient balance. Available: " + walletEntity.getBalance() + ", Required: " + soldPrice);
+        }
+
+        // Deduct the sold price from the wallet balance and update net exposure
+        walletEntity.setBalance(walletEntity.getBalance().subtract(soldPrice));
+        walletEntity.setNetExposure(walletEntity.getNetExposure().add(soldPrice));
+        walletRepository.save(walletEntity);
+
+        // Update player details
+        playerDto.setSoldPrice(request.getSoldPrice());
+        playerDto.setStatus("SOLD");
+        playerDto.setUserId(request.getUserId());
+        teamPlayerDetails.getPlayersDtoMap().put(request.getPlayerId(), playerDto);
+
+        // Save updated team player details
+        teamPlayerDetailsRepository.save(teamPlayerDetails);
     }
+
     @Override
     public List<TeamPlayerDetailsResponse> getMatchTeamPlayers(UUID id) {
         // Fetch match details
