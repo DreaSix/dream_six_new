@@ -1,5 +1,7 @@
 package com.dream.six.service.impl;
 
+import com.dream.six.entity.*;
+import com.dream.six.repository.*;
 import com.dream.six.entity.BidEntity;
 import com.dream.six.entity.MessageDetails;
 import com.dream.six.entity.UserInfoEntity;
@@ -32,24 +34,47 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final UserInfoRepository userInfoRepository;
+    private final TeamPlayerDetailsRepository teamPlayerDetailsRepository;
+    private final MatchDetailsRepository matchDetailsRepository;
     private final WalletRepository walletRepository;
 
     @Transactional
-    public BidResponseDTO createBid(UUID matchId, UUID playerId) {
+    public BidResponseDTO createBid(UUID matchId, UUID playerId) throws Exception {
         BidEntity existingBid = bidRepository.findByMatchIdAndPlayerId(matchId, playerId);
+        Optional<MatchDetails> matchDetails = matchDetailsRepository.findById(matchId);
 
+        if (matchDetails.isEmpty()) {
+            throw new Exception("Match not found with this ID");
+        }
+
+        List<TeamPlayerDetails> teamPlayerDetailsList = teamPlayerDetailsRepository.findByMatchDetails(matchDetails.get());
+
+        // Find the team that contains the player
+        TeamPlayerDetails matchingTeam = teamPlayerDetailsList.stream()
+                .filter(team -> team.getPlayersDtoMap().containsKey(playerId))
+                .findFirst()
+                .orElseThrow(() -> new Exception("Player not found in any team"));
+
+        // Update player status to "BIDDING"
+        TeamPlayerDetails.PlayersDto player = matchingTeam.getPlayersDtoMap().get(playerId);
+        if (player != null) {
+            player.setStatus("BIDDING");
+            matchingTeam.getPlayersDtoMap().put(playerId, player);
+            teamPlayerDetailsRepository.save(matchingTeam); // Save updated team details
+        }
+
+        // Create or update bid entity
         BidEntity bidEntity;
-
         if (existingBid == null) {
-            BidEntity newBid = new BidEntity();
-            newBid.setMatchId(matchId);
-            newBid.setPlayerId(playerId);
-            bidEntity = bidRepository.save(newBid);
+            bidEntity = new BidEntity();
+            bidEntity.setMatchId(matchId);
+            bidEntity.setPlayerId(playerId);
+            bidRepository.save(bidEntity);
         } else {
             bidEntity = existingBid;
         }
 
-
+        // Prepare response DTO
         BidResponseDTO bidResponseDTO = new BidResponseDTO();
         bidResponseDTO.setId(bidEntity.getId());
         bidResponseDTO.setMatchId(bidEntity.getMatchId());
@@ -143,6 +168,7 @@ public class MessageService {
         bidResponseDTO.setMatchId(existingBid.getMatchId());
         bidResponseDTO.setPlayerId(existingBid.getPlayerId());
         bidResponseDTO.setResponseDTOList(messageResponseDTOList);
+
         return bidResponseDTO;
     }
 

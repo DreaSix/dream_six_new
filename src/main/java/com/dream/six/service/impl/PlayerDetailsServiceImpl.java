@@ -51,7 +51,7 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
             playerDetails.setPlayerImage(imageBytes);
         }
         playerDetails.setStatus(String.valueOf(PlayerStatus.UN_SOLD));
-        playerDetails.setBasePrice(playerDetailsRequest.getBasePrice());
+        playerDetails.setBasePrice(1000);
 
         playerDetailsRepository.save(playerDetails);
     }
@@ -116,7 +116,7 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
                         }
                 ));
 
-        // Save new team players
+
         TeamPlayerDetails newTeamPlayerDetails = new TeamPlayerDetails();
         newTeamPlayerDetails.setTeamName(teamPlayerDetailsRequest.getTeamName());
         newTeamPlayerDetails.setMatchDetails(matchDetails);
@@ -172,18 +172,21 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
         // Fetch all team player details for the given match
         List<TeamPlayerDetails> playerMatchDetails = teamPlayerDetailsRepository.findByMatchDetails(matchDetails);
 
-        return playerMatchDetails.stream().map(
-                modelMapper::convertToTeamPlayerDetailsResponse
-        ).toList();
+        List<PlayerDetails> playerDetailsList = playerDetailsRepository.findAll();
+        return playerMatchDetails.stream().map(details -> {
+            TeamPlayerDetailsResponse teamPlayerDetailsResponse = modelMapper.convertToTeamPlayerDetailsResponse(details, playerDetailsList);
+            return teamPlayerDetailsResponse;
+        }).toList();
 
             }
 
     @Override
     public TeamPlayerDetailsResponse getTeamPlayerDetailsById(UUID teamPlayerId) {
+        List<PlayerDetails> playerDetailsList = playerDetailsRepository.findAll();
         TeamPlayerDetails teamPlayerDetails = teamPlayerDetailsRepository.findById(teamPlayerId)
                 .orElseThrow(() -> new ResourceNotFoundException("No team player details found for this match ID"));
 
-        return modelMapper.convertToTeamPlayerDetailsResponse(teamPlayerDetails);
+        return modelMapper.convertToTeamPlayerDetailsResponse(teamPlayerDetails, playerDetailsList);
     }
 
 

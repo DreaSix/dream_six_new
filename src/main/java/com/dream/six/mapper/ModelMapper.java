@@ -54,38 +54,56 @@ public class ModelMapper {
         return response;
     }
 
-    public TeamPlayerDetailsResponse convertToTeamPlayerDetailsResponse(TeamPlayerDetails teamPlayerDetails) {
+    public TeamPlayerDetailsResponse convertToTeamPlayerDetailsResponse(
+            TeamPlayerDetails teamPlayerDetails, List<PlayerDetails> playerDetailsList) {
+
         TeamPlayerDetailsResponse response = new TeamPlayerDetailsResponse();
 
         response.setId(teamPlayerDetails.getId()); // Use TeamPlayerDetails ID
         response.setTeamName(teamPlayerDetails.getTeamName());
 
         // Convert MatchDetails entity to response DTO
-        response.setMatchDetailsResponse(this.convertEntityToMatchDetailsResponse(teamPlayerDetails.getMatchDetails()));
+        response.setMatchDetailsResponse(
+                this.convertEntityToMatchDetailsResponse(teamPlayerDetails.getMatchDetails())
+        );
 
-        // Convert PlayersDtoMap properly
+        // Convert PlayersDtoMap properly with player details check
         response.setPlayersDtoMap(teamPlayerDetails.getPlayersDtoMap().entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
-                        entry -> mapToPlayersDto(entry.getValue())
+                        entry -> {
+                            PlayerDetails matchingPlayer = playerDetailsList.stream()
+                                    .filter(player -> player.getPlayerName().equals(entry.getValue().getPlayerName()))
+                                    .findFirst()
+                                    .orElse(null);
+
+                            return mapToPlayersDto(entry.getValue(), matchingPlayer);
+                        }
                 ))
         );
 
         return response;
     }
 
+
     /**
      * Maps PlayersDto entity to MatchPlayerDetailsResponse.PlayersDto DTO.
      */
-    public TeamPlayerDetailsResponse.PlayersDto mapToPlayersDto(TeamPlayerDetails.PlayersDto playerEntity) {
+    public TeamPlayerDetailsResponse.PlayersDto mapToPlayersDto(TeamPlayerDetails.PlayersDto playerEntity, PlayerDetails playerDetails) {
         TeamPlayerDetailsResponse.PlayersDto dto = new TeamPlayerDetailsResponse.PlayersDto();
         dto.setPlayerName(playerEntity.getPlayerName());
         dto.setStatus(playerEntity.getStatus());
+        byte[] imageBytes = playerDetails.getPlayerImage();
+
+        String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+
+        dto.setPlayerImage(base64Image);
+        dto.setPlayerId(playerDetails.getId());
         dto.setBasePrice(playerEntity.getBasePrice());
         dto.setSoldPrice(playerEntity.getSoldPrice());
-        UserInfoEntity userInfo =userInfoRepository.findById(playerEntity.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException(String.format(ErrorMessageConstants.RESOURCE_WITH_ID_NOT_FOUND, ErrorMessageConstants.USER_NOT_FOUND, playerEntity.getUserId())));
-        dto.setUserResponseVO(mapper.convertUserInfoEntityToUserResponse(userInfo));
+//        UserInfoEntity userInfo =userInfoRepository.findById(playerEntity.getUserId())
+//                .orElseThrow(() -> new ResourceNotFoundException(String.format(ErrorMessageConstants.RESOURCE_WITH_ID_NOT_FOUND, ErrorMessageConstants.USER_NOT_FOUND, playerEntity.getUserId())));
+//        dto.setUserResponseVO(mapper.convertUserInfoEntityToUserResponse(userInfo));
         return dto;
     }
 
@@ -93,7 +111,7 @@ public class ModelMapper {
     /**
      * Converts WinnerDetails entity to WinnerDetailsResponse DTO.
      */
-    public WinnerDetailsResponse convertToWinnerDetailsResponse(WinnerDetails winnerDetails) {
+    public WinnerDetailsResponse convertToWinnerDetailsResponse(WinnerDetails winnerDetails, List<PlayerDetails> playerDetails) {
         WinnerDetailsResponse response = new WinnerDetailsResponse();
 
         response.setId(winnerDetails.getId());
@@ -102,7 +120,7 @@ public class ModelMapper {
 
         // Convert TeamPlayerDetails to response DTO
         if (winnerDetails.getMatchDetails() != null) {
-            response.setTeamPlayerDetailsResponse(this.convertToTeamPlayerDetailsResponse(winnerDetails.getMatchDetails()));
+            response.setTeamPlayerDetailsResponse(this.convertToTeamPlayerDetailsResponse(winnerDetails.getMatchDetails(), playerDetails));
         }
 
         return response;
