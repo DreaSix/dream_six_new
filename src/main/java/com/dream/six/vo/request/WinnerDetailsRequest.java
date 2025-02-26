@@ -12,6 +12,7 @@ public class WinnerDetailsRequest {
     private UUID matchId;
     private BigDecimal winnerAmount;
     private UUID userId;
+    private UUID playerId;
 
 
 }

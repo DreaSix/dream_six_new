@@ -23,5 +23,7 @@ public class UserResponseVO {
 
     private String updatedAt;
 
+    private BigDecimal balance;
+
 
 }

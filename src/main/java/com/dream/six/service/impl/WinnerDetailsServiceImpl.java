@@ -12,6 +12,7 @@ import com.dream.six.vo.response.WinnerDetailsResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import javax.swing.text.html.Option;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -35,10 +36,17 @@ public class WinnerDetailsServiceImpl implements WinnerDetailsService {
 
     @Override
     public void createWinner(WinnerDetailsRequest request) throws Exception {
-        TeamPlayerDetails teamPlayerDetails = teamPlayerDetailsRepository.findById(request.getMatchId())
-                .orElseThrow(() -> new ResourceNotFoundException("TeamPlayerDetails details not found with ID: " + request.getMatchId()));
+        Optional<MatchDetails> matchDetails = matchDetailsRepository.findById(request.getMatchId());
+        Optional<PlayerDetails> playerDetails = playerDetailsRepository.findById(request.getPlayerId());
 
-        WinnerDetails winnerDetails = buildWinnerDetails(request, teamPlayerDetails);
+        if (matchDetails.isEmpty()){
+            throw new Exception("Match is not found with id");
+        }
+
+        if (playerDetails.isEmpty()){
+            throw new Exception("Player is not found with id");
+        }
+        WinnerDetails winnerDetails = buildWinnerDetails(request, matchDetails.get(), playerDetails.get());
         winnerDetailsRepository.save(winnerDetails);
     }
 
@@ -66,7 +74,7 @@ public class WinnerDetailsServiceImpl implements WinnerDetailsService {
     }
 
 
-    private WinnerDetails buildWinnerDetails(WinnerDetailsRequest request, TeamPlayerDetails teamPlayerDetails) throws IOException {
+    private WinnerDetails buildWinnerDetails(WinnerDetailsRequest request, MatchDetails matchDetails, PlayerDetails playerDetails) throws IOException {
         WinnerDetails winnerDetails = new WinnerDetails();
         UserInfoEntity userInfo = userInfoRepository.findByIdAndIsDeletedFalse(request.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException(String.format(ErrorMessageConstants.RESOURCE_WITH_ID_NOT_FOUND, ErrorMessageConstants.USER_NOT_FOUND, request.getUserId())));
@@ -77,7 +85,8 @@ public class WinnerDetailsServiceImpl implements WinnerDetailsService {
         }
         winnerDetails.setWinner(userInfo);
         winnerDetails.setWinnerAmount(request.getWinnerAmount());
-        winnerDetails.setMatchDetails(teamPlayerDetails);
+        winnerDetails.setMatchDetails(matchDetails);
+        winnerDetails.setPlayerDetails(playerDetails);
         return winnerDetails;
     }
 }

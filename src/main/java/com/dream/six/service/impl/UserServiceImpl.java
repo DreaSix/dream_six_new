@@ -146,8 +146,14 @@ public class UserServiceImpl implements UserService {
 
         log.info("User found successfully");
 
-        UserResponseVO userResponse = mapper.convertUserInfoEntityToUserResponse(userInfo);
+        Optional<WalletEntity> optionalWalletEntity = walletRepository.findByCreatedByUUID(userId);
 
+
+        UserResponseVO userResponse = mapper.convertUserInfoEntityToUserResponse(userInfo);
+        if(optionalWalletEntity.isPresent()){
+            WalletEntity walletEntity = optionalWalletEntity.get();
+            userResponse.setBalance(walletEntity.getBalance());
+        }
         userResponse.setName(userInfo.getName());
 
         return userResponse;
@@ -160,13 +166,19 @@ public class UserServiceImpl implements UserService {
         var pageable = PageRequest.of(pageNumber, pageSize, Sort.by(Constants.CREATED_AT).descending());
         var userInfoPage = userInfoRepository.findAllByIsDeletedFalse(pageable);
 
+        List<WalletEntity> walletEntities = walletRepository.findAll();
+
         var users = userInfoPage.getContent().stream()
                 .map(item -> {
                     UserResponseVO userResponseVO = mapper.convertUserInfoEntityToUserResponse(item);
                     userResponseVO.setName(item.getName());
 
-                    return userResponseVO;
+                    walletEntities.stream()
+                            .filter(wallet -> wallet.getCreatedBy().equals(String.valueOf(item.getId())))
+                            .findFirst()
+                            .ifPresent(wallet -> userResponseVO.setBalance(wallet.getBalance()));
 
+                    return userResponseVO;
                 })
                 .toList();
 

@@ -11,5 +11,6 @@ public class WinnerDetailsResponse {
     private UUID id;
     private UserResponseVO winnerName;
     private BigDecimal winnerAmount;
-    private TeamPlayerDetailsResponse teamPlayerDetailsResponse;
+    private MatchDetailsResponse matchDetailsResponse;
+    private PlayerDetailsResponse playerDetailsResponse;
 }

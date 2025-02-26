@@ -22,13 +22,17 @@ public class WinnerDetails  extends BaseEntity{
     @Column(name = "WINNER")
     private UserInfoEntity winner;
 
-    @JoinColumn(name = "TEAM_PLAYER_ID")
+    @JoinColumn(name = "MATCH_ID")
     @ManyToOne
-    private TeamPlayerDetails matchDetails;
+    private MatchDetails matchDetails;
 
     @Column(name = "WINNER_IMAGE")
     private byte[] winnerImage;
 
     @Column(name = "WINNER_AMOUNT")
     private BigDecimal winnerAmount;
+
+    @JoinColumn(name = "PLAYER_ID")
+    @ManyToOne
+    private PlayerDetails playerDetails;
 }

@@ -3,16 +3,10 @@ package com.dream.six.service.impl;
 
 import com.amazonaws.services.glue.model.EntityNotFoundException;
 import com.dream.six.constants.Constants;
-import com.dream.six.entity.Payment;
-import com.dream.six.entity.Transaction;
-import com.dream.six.entity.WalletEntity;
-import com.dream.six.entity.WithdrawBankEntity;
+import com.dream.six.entity.*;
 import com.dream.six.enums.Status;
 import com.dream.six.enums.TransactionType;
-import com.dream.six.repository.PaymentRepository;
-import com.dream.six.repository.TransactionRepository;
-import com.dream.six.repository.WalletRepository;
-import com.dream.six.repository.WithdrawRequestRepository;
+import com.dream.six.repository.*;
 import com.dream.six.service.TransactionService;
 import com.dream.six.vo.ApiPageResponse;
 import com.dream.six.vo.request.CreateWithdrawRequestDTO;
@@ -29,6 +23,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.dream.six.mapper.CommonMapper.mapper;
@@ -42,6 +37,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final PaymentRepository paymentRepository;
     private final WithdrawRequestRepository withdrawRequestRepository;
     private final WalletRepository walletRepository;
+    private final UserInfoRepository userInfoRepository;
 
     @Override
     public TransactionResponseDTO createTransaction(TransactionRequestDTO requestDTO) throws IOException {
@@ -58,8 +54,9 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setTransactionType(requestDTO.getTransactionType());
         transaction.setApprovalStatus(Status.PENDING);
         String userUUIDString = MDC.get(Constants.USER_UUID_ATTRIBUTE);
-        if (userUUIDString != null && !userUUIDString.isEmpty()) {
-            transaction.setCreatedByUUID(UUID.fromString(userUUIDString));
+        Optional<UserInfoEntity> userInfo = userInfoRepository.findByIdAndIsDeletedFalse(UUID.fromString(userUUIDString));
+        if (userInfo.isPresent()) {
+            transaction.setCreatedByUUID(userInfo.get().getId());
         } else {
             log.error("User UUID is missing in MDC");
             throw new IllegalArgumentException("User UUID is missing in MDC");
@@ -168,15 +165,9 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setApprovalStatus(approvalStatus);
 
         Transaction updatedTransaction = transactionRepository.save(transaction);
-        UUID userUUID;
-        try {
-            userUUID = UUID.fromString(MDC.get(Constants.USER_UUID_ATTRIBUTE));
-        } catch (IllegalArgumentException | NullPointerException e) {
-            throw new RuntimeException("Invalid UUID format in MDC: " + MDC.get(Constants.USER_UUID_ATTRIBUTE), e);
-        }
 
-        WalletEntity walletEntity = walletRepository.findByCreatedByUUID(userUUID)
-                .orElseThrow(() -> new RuntimeException("Wallet not found for user UUID: " + userUUID));
+        WalletEntity walletEntity = walletRepository.findByCreatedByUUID(transaction.getCreatedByUUID())
+                .orElseThrow(() -> new RuntimeException("Wallet not found for user UUID: " + transaction.getCreatedByUUID()));
         BigDecimal newBalance = walletEntity.getBalance().add(BigDecimal.valueOf(transaction.getAmount()));
         if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
             throw new RuntimeException("Insufficient balance");

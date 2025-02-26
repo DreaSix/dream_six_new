@@ -134,7 +134,11 @@ public class ModelMapper {
 
         // Convert TeamPlayerDetails to response DTO
         if (winnerDetails.getMatchDetails() != null) {
-            response.setTeamPlayerDetailsResponse(this.convertToTeamPlayerDetailsResponse(winnerDetails.getMatchDetails(), playerDetails, bidEntities));
+            response.setMatchDetailsResponse(this.convertEntityToMatchDetailsResponse(winnerDetails.getMatchDetails()));
+        }
+
+        if (winnerDetails.getPlayerDetails() != null){
+            response.setPlayerDetailsResponse(this.convertEntityToPlayerDetailsResponse(winnerDetails.getPlayerDetails()));
         }
 
         return response;
