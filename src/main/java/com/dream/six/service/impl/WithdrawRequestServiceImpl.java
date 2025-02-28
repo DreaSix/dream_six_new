@@ -69,6 +69,7 @@ public class WithdrawRequestServiceImpl implements WithdrawRequestService {
         WithdrawBankResponseDTO responseDTO = new WithdrawBankResponseDTO();
         responseDTO.setId(entity.getId());
         responseDTO.setBankName(entity.getBankName());
+        responseDTO.setAccountNumber(entity.getAccountNumber());
         responseDTO.setAccountHolderName(entity.getAccountHolderName());
         responseDTO.setIfscCode(entity.getIfscCode());
         return responseDTO;

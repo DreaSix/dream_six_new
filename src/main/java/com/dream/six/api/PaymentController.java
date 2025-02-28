@@ -22,7 +22,7 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<PaymentResponseDTO>> createPayment(@RequestBody PaymentRequestDTO requestDTO) {
+    public ResponseEntity<ApiResponse<PaymentResponseDTO>> createPayment(@RequestBody PaymentRequestDTO requestDTO) throws Exception {
         log.info("Received request to create payment: {}", requestDTO);
         PaymentResponseDTO response = paymentService.createPayment(requestDTO);
         log.info("Payment created successfully with ID: {}", response.getId());

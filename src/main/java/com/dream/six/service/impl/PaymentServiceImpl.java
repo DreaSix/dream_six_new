@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.dream.six.mapper.CommonMapper.mapper;
@@ -23,8 +24,14 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
 
     @Override
-    public PaymentResponseDTO createPayment(PaymentRequestDTO requestDTO) {
+    public PaymentResponseDTO createPayment(PaymentRequestDTO requestDTO) throws Exception {
         log.info("Creating a new payment: {}", requestDTO);
+
+        Optional<Payment> optionalPayment = paymentRepository.findByPaymentMethod(requestDTO.getPaymentMethod());
+
+        if (optionalPayment.isPresent()){
+            throw new Exception("Payement already exist with method");
+        }
 
         Payment payment = mapper.convertPaymentRequestToEntity(requestDTO);
 

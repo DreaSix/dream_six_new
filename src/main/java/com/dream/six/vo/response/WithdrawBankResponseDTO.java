@@ -7,6 +7,7 @@ import java.util.UUID;
 public class WithdrawBankResponseDTO {
     private UUID id;
     private String bankName;
+    private String accountNumber;
     private String accountHolderName;
     private String ifscCode;
 }

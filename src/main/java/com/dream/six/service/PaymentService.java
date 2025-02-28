@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface PaymentService {
-    PaymentResponseDTO createPayment(PaymentRequestDTO requestDTO);
+    PaymentResponseDTO createPayment(PaymentRequestDTO requestDTO) throws Exception;
 
     PaymentResponseDTO getPaymentById(UUID id);
 
