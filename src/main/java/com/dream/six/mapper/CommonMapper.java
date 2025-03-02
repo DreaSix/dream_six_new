@@ -48,8 +48,6 @@ public interface CommonMapper {
     }
 
 
-    Payment convertPaymentRequestToEntity(PaymentRequestDTO requestDTO);
-
     PaymentResponseDTO convertEntityToPaymentResponseDTO(Payment savedPayment);
 
 

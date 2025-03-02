@@ -41,8 +41,9 @@ public class Payment extends BaseEntity{
     @Column(name = "UPI_PHONE")
     private String upiPhone;
 
-    @Column(name = "QR_CODE_URL")
-    private String qrCodeUrl;
+    @Lob
+    @Column(name = "QR_CODE")
+    private byte[] qrCode;
 
 
 }

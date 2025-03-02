@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,10 +32,27 @@ public class PaymentServiceImpl implements PaymentService {
         Optional<Payment> optionalPayment = paymentRepository.findByPaymentMethod(requestDTO.getPaymentMethod());
 
         if (optionalPayment.isPresent()){
-            throw new Exception("Payement already exist with method");
+            throw new Exception("Payment already exist with method");
         }
 
-        Payment payment = mapper.convertPaymentRequestToEntity(requestDTO);
+        Payment payment = new Payment();
+
+        payment.setPaymentMethod(requestDTO.getPaymentMethod());
+        payment.setAccountName(requestDTO.getAccountName());
+        payment.setAccountNumber(requestDTO.getAccountNumber());
+        payment.setIfscCode(requestDTO.getIfscCode());
+        payment.setBankName(requestDTO.getBankName());
+        payment.setUpiId(requestDTO.getUpiId());
+        payment.setUpiPhone(requestDTO.getUpiPhone());
+
+        if (requestDTO.getPaymentMethod().equalsIgnoreCase("UPI")){
+            if (requestDTO.getQrCode() != null && !requestDTO.getQrCode().isEmpty()) {
+                // Convert the image file to a byte array
+                byte[] imageBytes = requestDTO.getQrCode().getBytes();
+                // Set the byte array to matchDetails
+                payment.setQrCode(imageBytes);
+            }
+        }
 
         Payment savedPayment = paymentRepository.save(payment);
 
@@ -50,11 +69,20 @@ public class PaymentServiceImpl implements PaymentService {
                     return new RuntimeException("Payment not found for ID: " + id);
                 });
 
-        return mapper.convertEntityToPaymentResponseDTO(payment);
+        PaymentResponseDTO paymentResponseDTO = mapper.convertEntityToPaymentResponseDTO(payment);
+        if (payment.getQrCode() != null){
+            byte[] imageBytes = payment.getQrCode();
+
+            String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+
+            paymentResponseDTO.setQrCodeUrl(base64Image);
+        }
+
+        return paymentResponseDTO;
     }
 
     @Override
-    public PaymentResponseDTO updatePayment(UUID id, PaymentRequestDTO requestDTO) {
+    public PaymentResponseDTO updatePayment(UUID id, PaymentRequestDTO requestDTO) throws IOException {
         log.info("Updating payment with ID: {}", id);
 
         Payment existingPayment = paymentRepository.findById(id)
@@ -70,7 +98,14 @@ public class PaymentServiceImpl implements PaymentService {
         existingPayment.setBankName(requestDTO.getBankName());
         existingPayment.setUpiId(requestDTO.getUpiId());
         existingPayment.setUpiPhone(requestDTO.getUpiPhone());
-        existingPayment.setQrCodeUrl(requestDTO.getQrCodeUrl());
+        if (requestDTO.getPaymentMethod().equalsIgnoreCase("UPI")){
+            if (requestDTO.getQrCode() != null && !requestDTO.getQrCode().isEmpty()) {
+                // Convert the image file to a byte array
+                byte[] imageBytes = requestDTO.getQrCode().getBytes();
+                // Set the byte array to matchDetails
+                existingPayment.setQrCode(imageBytes);
+            }
+        }
 
         Payment updatedPayment = paymentRepository.save(existingPayment);
 
@@ -97,7 +132,18 @@ public class PaymentServiceImpl implements PaymentService {
         List<Payment> payments = paymentRepository.findAll();
 
         return payments.stream()
-                .map(mapper::convertEntityToPaymentResponseDTO)
+                .map(payment -> {
+                    PaymentResponseDTO paymentResponseDTO = mapper.convertEntityToPaymentResponseDTO(payment);
+
+                    if (payment.getQrCode() != null){
+                        byte[] imageBytes = payment.getQrCode();
+
+                        String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+
+                        paymentResponseDTO.setQrCodeUrl(base64Image);
+                    }
+                    return paymentResponseDTO;
+                })
                 .toList();
     }
 }

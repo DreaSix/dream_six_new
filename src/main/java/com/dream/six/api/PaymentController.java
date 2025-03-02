@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,7 +23,7 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<PaymentResponseDTO>> createPayment(@RequestBody PaymentRequestDTO requestDTO) throws Exception {
+    public ResponseEntity<ApiResponse<PaymentResponseDTO>> createPayment(@ModelAttribute PaymentRequestDTO requestDTO) throws Exception {
         log.info("Received request to create payment: {}", requestDTO);
         PaymentResponseDTO response = paymentService.createPayment(requestDTO);
         log.info("Payment created successfully with ID: {}", response.getId());
@@ -46,7 +47,7 @@ public class PaymentController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<PaymentResponseDTO>> updatePayment(@PathVariable UUID id, @RequestBody PaymentRequestDTO requestDTO) {
+    public ResponseEntity<ApiResponse<PaymentResponseDTO>> updatePayment(@PathVariable UUID id, @RequestBody PaymentRequestDTO requestDTO) throws IOException {
         log.info("Received request to update payment with ID: {}", id);
         PaymentResponseDTO response = paymentService.updatePayment(id, requestDTO);
         log.info("Payment updated successfully with ID: {}", id);

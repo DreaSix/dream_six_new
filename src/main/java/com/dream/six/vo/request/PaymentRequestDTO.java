@@ -1,6 +1,7 @@
 package com.dream.six.vo.request;
 
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 public class PaymentRequestDTO {
@@ -15,7 +16,7 @@ public class PaymentRequestDTO {
     // UPI fields
     private String upiId;
     private String upiPhone;
-    private String qrCodeUrl;
+    private MultipartFile qrCode;
 
     private Double amount;
 }
