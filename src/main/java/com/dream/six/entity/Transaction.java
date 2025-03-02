@@ -27,11 +27,11 @@ public class Transaction extends BaseEntity{
     @Column(name = "TRANSACTION_IMAGE")
     private byte[] image;
 
-    @Column(name = "UTR", unique = true, nullable = false)
+    @Column(name = "UTR", unique = true)
     private String utr;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "PAYMENT_ID", nullable = false)
+    @JoinColumn(name = "PAYMENT_ID")
     private Payment payment;
 
     @Enumerated(EnumType.STRING)
