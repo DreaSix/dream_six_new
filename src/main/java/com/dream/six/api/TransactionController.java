@@ -182,7 +182,7 @@ public class TransactionController {
 
     @PutMapping("/withdraw/approve")
     public ResponseEntity<ApiResponse<TransactionResponseDTO>> updateTransaction(
-            @ModelAttribute UpdateTransactionDTO updateTransactionDTO) throws IOException {
+            @RequestBody UpdateTransactionDTO updateTransactionDTO) throws IOException {
         log.info("Updating transaction with ID: {}", updateTransactionDTO.getTransactionId());
 
         TransactionResponseDTO updatedTransaction = transactionService.updateWithdrawTransaction(updateTransactionDTO);

@@ -89,11 +89,13 @@ public class TransactionServiceImpl implements TransactionService {
                 .map(item -> {
                     TransactionResponseDTO transactionResponseDTO = mapper.convertEntityToTransactionResponseDTO(item);
                     transactionResponseDTO.setUserName(item.getCreatedBy());
-                    byte[] imageBytes = item.getImage();
+                    if (item.getImage() != null){
+                        byte[] imageBytes = item.getImage();
 
-                    String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+                        String base64Image = Base64.getEncoder().encodeToString(imageBytes);
 
-                    transactionResponseDTO.setTransactionImage(base64Image);
+                        transactionResponseDTO.setTransactionImage(base64Image);
+                    }
 
                     return transactionResponseDTO;
                 })
@@ -216,7 +218,6 @@ public class TransactionServiceImpl implements TransactionService {
         Transaction transaction = transactionRepository.findById(updateTransactionDTO.getTransactionId())
                 .orElseThrow(() -> new EntityNotFoundException("Transaction not found"));
 
-        transaction.setImage(updateTransactionDTO.getTransactionImage().getBytes());
         transaction.setApprovalStatus(updateTransactionDTO.getApprovalStatus());
 
         UUID userUUID;
