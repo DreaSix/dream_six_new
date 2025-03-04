@@ -18,5 +18,8 @@ public class TransactionResponseDTO {
     private String userName;
     private String transactionImage;
     private Timestamp createdAt;
+    private String accountNumber;
+    private String accountHolderName;
+    private String ifscCode;
 
 }

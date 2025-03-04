@@ -89,6 +89,11 @@ public class TransactionServiceImpl implements TransactionService {
                 .map(item -> {
                     TransactionResponseDTO transactionResponseDTO = mapper.convertEntityToTransactionResponseDTO(item);
                     transactionResponseDTO.setUserName(item.getCreatedBy());
+                    if (item.getWithdrawBank() != null){
+                        transactionResponseDTO.setAccountHolderName(item.getWithdrawBank().getAccountHolderName());
+                        transactionResponseDTO.setAccountNumber(item.getWithdrawBank().getAccountNumber());
+                        transactionResponseDTO.setIfscCode(item.getWithdrawBank().getIfscCode());
+                    }
                     if (item.getImage() != null){
                         byte[] imageBytes = item.getImage();
 
