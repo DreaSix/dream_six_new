@@ -1,10 +1,14 @@
 package com.dream.six.api;
 
+import com.dream.six.constants.ApiResponseMessages;
 import com.dream.six.service.impl.MessageService;
+import com.dream.six.vo.ApiResponse;
 import com.dream.six.vo.response.BidResponseDTO;
+import com.dream.six.vo.response.TransactionResponseDTO;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -42,15 +46,22 @@ public class ChatController {
         simpMessagingTemplate.convertAndSend("/topic/public", response);
     }
 
-    @MessageMapping("/chat/getMatchMessages") // Matches React publish destination
-    public void getMatchMessages(@Payload BidMessageRequest request) {
-        log.info("Fetching messages for bidId: {}", request.getBidId());
+    @GetMapping("/chat/getMatchMessages/{bidId}") // Matches React publish destination
+    public ResponseEntity<ApiResponse<BidResponseDTO>> getMatchMessages(@PathVariable UUID bidId) {
+        log.info("Fetching messages for bidId: {}", bidId);
 
         // Retrieve messages
-        BidResponseDTO response = messageService.getMessages(request.getBidId());
+        BidResponseDTO response = messageService.getMessages(bidId);
+
+        ApiResponse<BidResponseDTO> apiResponse = ApiResponse.<BidResponseDTO>builder()
+                .data(response)
+                .message(ApiResponseMessages.TRANSACTION_FETCHED_SUCCESSFULLY)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
 
         // Send response back to client
-        simpMessagingTemplate.convertAndSend("/topic/public", response);
+//        simpMessagingTemplate.convertAndSend("/topic/public", response);
     }
 
     @Setter
