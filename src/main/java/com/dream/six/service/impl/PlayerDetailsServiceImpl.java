@@ -104,7 +104,7 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
                         player -> {
                             TeamPlayerDetails.PlayersDto dto = new TeamPlayerDetails.PlayersDto();
                             dto.setPlayerName(player.getPlayerName());
-                            dto.setBasePrice(player.getBasePrice());
+                            dto.setBasePrice(1000.0);
                             dto.setSoldPrice(0.0); // Default to zero
                             dto.setStatus("UNSOLD"); // Default status
                             return dto;
