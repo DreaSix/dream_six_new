@@ -2,6 +2,7 @@ package com.dream.six.vo.response;
 
 import lombok.Data;
 
+import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 
@@ -22,6 +23,8 @@ public class TeamPlayerDetailsResponse {
         private String status;
         private Double basePrice;
         private Double soldPrice;
-//        private UserResponseVO userResponseVO;
+        private Date soldDate;
+        private UUID userId;
+        private UserResponseVO userResponseVO;
     }
 }

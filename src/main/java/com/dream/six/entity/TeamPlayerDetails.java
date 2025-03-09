@@ -6,6 +6,7 @@ import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 
@@ -44,6 +45,9 @@ public class TeamPlayerDetails extends BaseEntity implements Serializable {
 
         @Column(name = "PLAYER_NAME", nullable = false)
         private String playerName;
+
+        @Column(name = "SOLD_DATE")
+        private Date soldDate;
 
         @Column(name = "STATUS", nullable = false)
         private String status;

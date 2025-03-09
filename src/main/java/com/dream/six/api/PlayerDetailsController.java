@@ -103,6 +103,19 @@ public class PlayerDetailsController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @GetMapping("/userBets/{userId}")
+    public ResponseEntity<ApiResponse<List<TeamPlayerDetailsResponse.PlayersDto>>> getUserMatchBets(@PathVariable UUID userId) {
+
+        List<TeamPlayerDetailsResponse.PlayersDto> playerDetailsResponseList = playerDetailsService.getUserMatchBets(userId);
+
+        ApiResponse<List<TeamPlayerDetailsResponse.PlayersDto>> apiResponse = ApiResponse.<List<TeamPlayerDetailsResponse.PlayersDto>>builder()
+                .data(playerDetailsResponseList)
+                .message("Match players fetched successfully")
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
     @GetMapping("/{teamPlayerId}")
     public ResponseEntity<ApiResponse<TeamPlayerDetailsResponse>> getTeamPlayerDetailsById(@PathVariable UUID teamPlayerId) {
         log.info("Received request to fetch match players for match ID: {}", teamPlayerId);

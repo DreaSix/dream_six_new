@@ -19,6 +19,7 @@ public class BidResponseDTO {
         private UUID id;
         private String message;
         private String username;
+        private UUID userId;
         private String name;
         private LocalDateTime timestamp;
 

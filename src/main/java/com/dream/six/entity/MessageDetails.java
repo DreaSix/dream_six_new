@@ -26,7 +26,7 @@ public class MessageDetails {
 
     private String message;
     private String username;
-    private String userId;
+    private UUID userId;
     private String name;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

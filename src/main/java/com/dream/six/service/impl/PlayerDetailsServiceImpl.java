@@ -133,11 +133,17 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
             throw new ResourceNotFoundException("Player with ID " + request.getPlayerId() + " not found in the team.");
         }
 
-        // Fetch user wallet
-        WalletEntity walletEntity = walletRepository.findByCreatedByUUID(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("No wallet found for userId: " + request.getUserId()));
+        List<WalletEntity> walletEntities = walletRepository.findAll();
 
-        // Validate wallet balance
+        // Fetch user wallet
+        Optional<WalletEntity> optionalWalletEntity = walletEntities.stream().filter(wallet -> wallet.getCreatedByUUID().equals(request.getUserId())).findFirst();
+
+        if (optionalWalletEntity.isEmpty()){
+            throw new RuntimeException("No wallet found for userId: " + request.getUserId());
+        }
+
+        WalletEntity walletEntity = optionalWalletEntity.get();
+
         BigDecimal soldPrice = BigDecimal.valueOf(request.getSoldPrice());
         if (walletEntity.getBalance().compareTo(soldPrice) < 0) {
             throw new RuntimeException("Insufficient balance. Available: " + walletEntity.getBalance() + ", Required: " + soldPrice);
@@ -152,6 +158,7 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
         playerDto.setSoldPrice(request.getSoldPrice());
         playerDto.setStatus("SOLD");
         playerDto.setUserId(request.getUserId());
+        playerDto.setSoldDate(new Date());
         teamPlayerDetails.getPlayersDtoMap().put(request.getPlayerId(), playerDto);
 
         // Save updated team player details
@@ -185,6 +192,44 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
 
         return modelMapper.convertToTeamPlayerDetailsResponse(teamPlayerDetails, playerDetailsList, bidDetails);
     }
+
+    @Override
+    public List<TeamPlayerDetailsResponse.PlayersDto> getUserMatchBets(UUID userId) {
+        List<TeamPlayerDetails> teamPlayerDetails = teamPlayerDetailsRepository.findAll();
+        List<PlayerDetails> playerDetailsList = playerDetailsRepository.findAll(); // Fetch all player details
+
+        List<TeamPlayerDetailsResponse.PlayersDto> playersDtos = new ArrayList<>();
+
+        teamPlayerDetails.forEach(team -> {
+            team.getPlayersDtoMap().forEach((playerId, player) -> { // Get key (playerId) and value (player)
+                if (player.getUserId() != null && player.getUserId().equals(userId)) {
+                    TeamPlayerDetailsResponse.PlayersDto dto = new TeamPlayerDetailsResponse.PlayersDto();
+                    dto.setPlayerName(player.getPlayerName());
+                    dto.setStatus(player.getStatus());
+                    dto.setBasePrice(player.getBasePrice());
+                    dto.setSoldPrice(player.getSoldPrice());
+                    dto.setUserId(player.getUserId());
+
+                    // Find the player's image using playerId
+                    playerDetailsList.stream()
+                            .filter(p -> p.getId().equals(playerId)) // Match playerId
+                            .findFirst()
+                            .ifPresent(p -> {
+                                byte[] imageBytes = p.getPlayerImage();
+
+                                String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+                                dto.setPlayerImage(base64Image);
+                            });
+
+                    playersDtos.add(dto);
+                }
+            });
+        });
+
+        return playersDtos;
+    }
+
+
 
 
 }

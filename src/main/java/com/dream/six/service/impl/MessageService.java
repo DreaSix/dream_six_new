@@ -101,6 +101,7 @@ public class MessageService {
         MessageDetails messageDetail = new MessageDetails();
         messageDetail.setName(userInfoEntity.getName());
         messageDetail.setBid(existingBid);
+        messageDetail.setUserId(userInfoEntity.getId());
         messageDetail.setMessage(messageContent);
         messageDetail.setUsername(username);
         messageDetail.setTimestamp(LocalDateTime.now());
@@ -156,6 +157,7 @@ public class MessageService {
         messageResponseDTO.setId(messageDetails.getId());
         messageResponseDTO.setMessage(messageDetails.getMessage());
         messageResponseDTO.setUsername(messageDetails.getUsername());
+        messageResponseDTO.setUserId(messageDetails.getUserId());
         messageResponseDTO.setName(messageDetails.getName());
         messageResponseDTO.setTimestamp(messageDetails.getTimestamp());
         return messageResponseDTO;
@@ -186,6 +188,7 @@ public class MessageService {
                     messageResponseDTO.setId(messageDetails.getId());
                     messageResponseDTO.setMessage(messageDetails.getMessage());
                     messageResponseDTO.setUsername(messageDetails.getUsername());
+                    messageResponseDTO.setUserId(messageDetails.getUserId());
                     messageResponseDTO.setTimestamp(messageDetails.getTimestamp());
                     messageResponseDTO.setName(messageDetails.getName());
                     return messageResponseDTO;

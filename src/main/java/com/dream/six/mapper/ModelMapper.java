@@ -5,10 +5,7 @@ import com.dream.six.constants.ErrorMessageConstants;
 import com.dream.six.entity.*;
 import com.dream.six.exception.ResourceNotFoundException;
 import com.dream.six.repository.UserInfoRepository;
-import com.dream.six.vo.response.MatchDetailsResponse;
-import com.dream.six.vo.response.PlayerDetailsResponse;
-import com.dream.six.vo.response.TeamPlayerDetailsResponse;
-import com.dream.six.vo.response.WinnerDetailsResponse;
+import com.dream.six.vo.response.*;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -115,9 +112,13 @@ public class ModelMapper {
         if (bidEntity != null && !bidEntity.isDeleted()){
             dto.setBidId(bidEntity.getId());
         }
-//        UserInfoEntity userInfo =userInfoRepository.findById(playerEntity.getUserId())
-//                .orElseThrow(() -> new ResourceNotFoundException(String.format(ErrorMessageConstants.RESOURCE_WITH_ID_NOT_FOUND, ErrorMessageConstants.USER_NOT_FOUND, playerEntity.getUserId())));
-//        dto.setUserResponseVO(mapper.convertUserInfoEntityToUserResponse(userInfo));
+        if (playerEntity.getUserId() != null){
+            UserInfoEntity userInfo =userInfoRepository.findById(playerEntity.getUserId())
+                    .orElseThrow(() -> new ResourceNotFoundException(String.format(ErrorMessageConstants.RESOURCE_WITH_ID_NOT_FOUND, ErrorMessageConstants.USER_NOT_FOUND, playerEntity.getUserId())));
+            UserResponseVO userResponseVO = mapper.convertUserInfoEntityToUserResponse(userInfo);
+            userResponseVO.setName(userInfo.getName());
+            dto.setUserResponseVO(userResponseVO);
+        }
         return dto;
     }
 
