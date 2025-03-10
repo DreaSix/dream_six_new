@@ -194,39 +194,54 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
     }
 
     @Override
-    public List<TeamPlayerDetailsResponse.PlayersDto> getUserMatchBets(UUID userId) {
-        List<TeamPlayerDetails> teamPlayerDetails = teamPlayerDetailsRepository.findAll();
+    public List<TeamPlayerDetailsResponse> getUserMatchBets(UUID userId) {
+        List<TeamPlayerDetails> teamPlayerDetailsList = teamPlayerDetailsRepository.findAll();
         List<PlayerDetails> playerDetailsList = playerDetailsRepository.findAll(); // Fetch all player details
 
-        List<TeamPlayerDetailsResponse.PlayersDto> playersDtos = new ArrayList<>();
+        List<TeamPlayerDetailsResponse> responseList = new ArrayList<>();
 
-        teamPlayerDetails.forEach(team -> {
-            team.getPlayersDtoMap().forEach((playerId, player) -> { // Get key (playerId) and value (player)
+        teamPlayerDetailsList.forEach(team -> {
+            Map<UUID, TeamPlayerDetailsResponse.PlayersDto> playersDtoMap = new HashMap<>();
+
+            team.getPlayersDtoMap().forEach((playerId, player) -> {
                 if (player.getUserId() != null && player.getUserId().equals(userId)) {
                     TeamPlayerDetailsResponse.PlayersDto dto = new TeamPlayerDetailsResponse.PlayersDto();
+                    dto.setPlayerId(playerId);
                     dto.setPlayerName(player.getPlayerName());
                     dto.setStatus(player.getStatus());
                     dto.setBasePrice(player.getBasePrice());
                     dto.setSoldPrice(player.getSoldPrice());
+                    dto.setSoldDate(player.getSoldDate());
                     dto.setUserId(player.getUserId());
+                    dto.setBidId(player.getUserId()); // If `bidId` is different, replace accordingly.
 
                     // Find the player's image using playerId
                     playerDetailsList.stream()
-                            .filter(p -> p.getId().equals(playerId)) // Match playerId
+                            .filter(p -> p.getId().equals(playerId))
                             .findFirst()
                             .ifPresent(p -> {
                                 byte[] imageBytes = p.getPlayerImage();
-
                                 String base64Image = Base64.getEncoder().encodeToString(imageBytes);
                                 dto.setPlayerImage(base64Image);
                             });
 
-                    playersDtos.add(dto);
+                    playersDtoMap.put(playerId, dto);
                 }
             });
+
+            // Only add teams where the user has placed a bet
+            if (!playersDtoMap.isEmpty()) {
+                TeamPlayerDetailsResponse response = new TeamPlayerDetailsResponse();
+                response.setId(team.getId());
+                response.setTeamName(team.getTeamName());
+                response.setMatchDetailsResponse(modelMapper.convertEntityToMatchDetailsResponse(team.getMatchDetails())); // Convert MatchDetails to Response DTO
+                response.setPlayersDtoMap(playersDtoMap);
+
+                responseList.add(response);
+            }
         });
 
-        return playersDtos;
+        return responseList;
     }
 
 

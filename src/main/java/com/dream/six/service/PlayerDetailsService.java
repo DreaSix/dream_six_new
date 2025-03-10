@@ -23,5 +23,5 @@ public interface PlayerDetailsService {
 
     TeamPlayerDetailsResponse getTeamPlayerDetailsById(UUID teamPlayerId);
 
-    List<TeamPlayerDetailsResponse.PlayersDto> getUserMatchBets(UUID userId);
+    List<TeamPlayerDetailsResponse> getUserMatchBets(UUID userId);
 }

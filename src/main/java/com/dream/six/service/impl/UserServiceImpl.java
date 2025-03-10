@@ -174,7 +174,7 @@ public class UserServiceImpl implements UserService {
                     userResponseVO.setName(item.getName());
 
                     walletEntities.stream()
-                            .filter(wallet -> wallet.getCreatedBy().equals(String.valueOf(item.getId())))
+                            .filter(wallet -> wallet.getCreatedByUUID().equals(item.getId()))
                             .findFirst()
                             .ifPresent(wallet -> userResponseVO.setBalance(wallet.getBalance()));
 

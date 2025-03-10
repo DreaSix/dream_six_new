@@ -76,7 +76,7 @@ public class WinnerDetailsServiceImpl implements WinnerDetailsService {
 
     private WinnerDetails buildWinnerDetails(WinnerDetailsRequest request, MatchDetails matchDetails, PlayerDetails playerDetails) throws IOException {
         WinnerDetails winnerDetails = new WinnerDetails();
-        UserInfoEntity userInfo = userInfoRepository.findByIdAndIsDeletedFalse(request.getUserId())
+            UserInfoEntity userInfo = userInfoRepository.findByIdAndIsDeletedFalse(request.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException(String.format(ErrorMessageConstants.RESOURCE_WITH_ID_NOT_FOUND, ErrorMessageConstants.USER_NOT_FOUND, request.getUserId())));
         Optional<WalletEntity> optionalWalletEntity = walletRepository.findByCreatedByUUID(request.getUserId());
         if(optionalWalletEntity.isPresent()){

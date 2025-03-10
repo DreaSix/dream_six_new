@@ -130,7 +130,9 @@ public class ModelMapper {
         WinnerDetailsResponse response = new WinnerDetailsResponse();
 
         response.setId(winnerDetails.getId());
-        response.setWinnerName(mapper.convertUserInfoEntityToUserResponse(winnerDetails.getWinner()));
+        UserResponseVO userResponseVO = mapper.convertUserInfoEntityToUserResponse(winnerDetails.getWinner());
+        userResponseVO.setName(winnerDetails.getWinner().getName());
+        response.setWinnerName(userResponseVO);
         response.setWinnerAmount(winnerDetails.getWinnerAmount());
 
         // Convert TeamPlayerDetails to response DTO

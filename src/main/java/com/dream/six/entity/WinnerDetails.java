@@ -18,8 +18,8 @@ public class WinnerDetails  extends BaseEntity{
     @Column(name = "ID")
     private UUID id;
 
-
-    @Column(name = "WINNER")
+    @JoinColumn(name = "USER_ID")
+    @ManyToOne
     private UserInfoEntity winner;
 
     @JoinColumn(name = "MATCH_ID")
