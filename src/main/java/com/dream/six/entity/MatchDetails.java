@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @EqualsAndHashCode(callSuper = true)
@@ -40,7 +41,7 @@ public class MatchDetails extends BaseEntity {
     private String teamTwoName;
 
     @Column(name = "MATCH_ACTION")
-    private String matchAction;
+    private List<String> matchAction;
 
     @Column(name = "OPTION_COMPLETED")
     private String optionCompleted;

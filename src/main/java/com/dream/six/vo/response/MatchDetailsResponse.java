@@ -3,6 +3,7 @@ package com.dream.six.vo.response;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -16,7 +17,7 @@ public class MatchDetailsResponse {
     private LocalDateTime countdownEndTime;
     private String teamOneName;
     private String teamTwoName;
-    private String matchAction;
+    private List<String> matchAction;
     private String optionCompleted;
 
 }
