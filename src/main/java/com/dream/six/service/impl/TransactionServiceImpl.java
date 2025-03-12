@@ -216,6 +216,22 @@ public class TransactionServiceImpl implements TransactionService {
 
         transactionRepository.save(transaction);
 
+        UUID userUUID;
+        try {
+            userUUID = UUID.fromString(MDC.get(Constants.USER_UUID_ATTRIBUTE));
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new RuntimeException("Invalid UUID format in MDC: " + MDC.get(Constants.USER_UUID_ATTRIBUTE), e);
+        }
+
+        WalletEntity walletEntity = walletRepository.findByCreatedByUUID(userUUID)
+                .orElseThrow(() -> new RuntimeException("Wallet not found for user UUID: " + userUUID));
+        BigDecimal newBalance = walletEntity.getBalance().subtract(BigDecimal.valueOf(transaction.getAmount()));
+        if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new RuntimeException("Insufficient balance");
+        }
+        walletEntity.setBalance(newBalance);
+        walletRepository.save(walletEntity);
+
     }
 
     @Override
@@ -232,13 +248,21 @@ public class TransactionServiceImpl implements TransactionService {
             throw new RuntimeException("Invalid UUID format in MDC: " + MDC.get(Constants.USER_UUID_ATTRIBUTE), e);
         }
 
-        WalletEntity walletEntity = walletRepository.findByCreatedByUUID(userUUID)
-                .orElseThrow(() -> new RuntimeException("Wallet not found for user UUID: " + userUUID));
-        BigDecimal newBalance = walletEntity.getBalance().subtract(BigDecimal.valueOf(transaction.getAmount()));
-        if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new RuntimeException("Insufficient balance");
+        WalletEntity walletEntity = walletRepository.findByCreatedByUUID(transaction.getCreatedByUUID())
+                .orElseThrow(() -> new RuntimeException("Wallet not found for user UUID: " + transaction.getCreatedByUUID()));
+
+        if (!"APPROVED".equalsIgnoreCase(String.valueOf(updateTransactionDTO.getApprovalStatus()))) {
+            BigDecimal newBalance = walletEntity.getBalance().add(BigDecimal.valueOf(transaction.getAmount()));
+            walletEntity.setBalance(newBalance);
         }
-        walletEntity.setBalance(newBalance);
+
+//        WalletEntity walletEntity = walletRepository.findByCreatedByUUID(userUUID)
+//                .orElseThrow(() -> new RuntimeException("Wallet not found for user UUID: " + userUUID));
+//        BigDecimal newBalance = walletEntity.getBalance().subtract(BigDecimal.valueOf(transaction.getAmount()));
+//        if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
+//            throw new RuntimeException("Insufficient balance");
+//        }
+//        walletEntity.setBalance(newBalance);
         walletRepository.save(walletEntity);
         Transaction updatedTransaction = transactionRepository.save(transaction);
 
