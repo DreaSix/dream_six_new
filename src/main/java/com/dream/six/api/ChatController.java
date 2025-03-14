@@ -1,6 +1,7 @@
 package com.dream.six.api;
 
 import com.dream.six.constants.ApiResponseMessages;
+import com.dream.six.enums.EntityFlag;
 import com.dream.six.service.impl.MessageService;
 import com.dream.six.vo.ApiResponse;
 import com.dream.six.vo.response.BidResponseDTO;
@@ -30,7 +31,7 @@ public class ChatController {
     }
 
     @PostMapping("/createBid")
-    public BidResponseDTO createBid(@RequestParam UUID matchId, @RequestParam UUID playerId) throws Exception {
+    public BidResponseDTO createBid(@RequestParam UUID matchId, @RequestParam UUID playerId ,@RequestParam EntityFlag flag) throws Exception {
         log.info("Creating bid for matchId: {} and playerId: {}", matchId, playerId);
         return messageService.createBid(matchId, playerId);
     }

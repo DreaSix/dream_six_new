@@ -2,13 +2,15 @@ package com.dream.six.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.UUID;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 @Entity
 @Table(name = "PLAYER_DETAILS")
-public class PlayerDetails {
+public class PlayerDetails extends BaseEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

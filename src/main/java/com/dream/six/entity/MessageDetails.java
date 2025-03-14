@@ -4,17 +4,19 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 @Entity
 @Table(name = "DS_MESSAGE")
 @NoArgsConstructor
 @AllArgsConstructor
-public class MessageDetails {
+public class MessageDetails extends BaseEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

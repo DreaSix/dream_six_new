@@ -1,5 +1,6 @@
 package com.dream.six.entity;
 
+import com.dream.six.enums.EntityFlag;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -34,9 +35,12 @@ public class BaseEntity implements Serializable {
     @Column(name = "IS_DELETED")
     private boolean isDeleted;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "FLAG")
+    private EntityFlag flag;
+
     @PrePersist
     protected void onCreate() {
-
         Timestamp now = Timestamp.from(Instant.now());
         createdAt = now;
         updatedAt = now;

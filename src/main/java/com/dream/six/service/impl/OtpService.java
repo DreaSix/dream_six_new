@@ -36,12 +36,13 @@ public class OtpService {
         return response.getBody();
     }
 
-    public OtpResponse verifyOtp(String otp, String mobileNumber) {
+    public OtpResponse verifyOtp(String otp, String mobileNumber, String reqId) {
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("tokenAuth", msg91Config.getAuthKey());
         requestBody.put("otp", otp);
         requestBody.put("widgetId", msg91Config.getWidgetId());
         requestBody.put("identifier", "91" + mobileNumber);
+        requestBody.put("reqId", reqId); // ✅ Added reqId
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
