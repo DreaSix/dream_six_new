@@ -59,6 +59,16 @@ public class MatchDetailsController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @PutMapping("/update/{id}")
+    public ResponseEntity<ApiResponse<Void>> updateMatchDone(@PathVariable UUID id) {
+        log.info("Received request to update match details with ID: {}", id);
+        matchDetailsService.updateMatchDone(id);
+        log.info("Match details updated successfully with ID: {}", id);
+        ApiResponse<Void> apiResponse = ApiResponse.<Void>builder()
+                .message(ApiResponseMessages.MATCH_DETAILS_UPDATED_SUCCESSFULLY)
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteMatchDetails(@PathVariable UUID id) {
         log.info("Received request to delete match details with ID: {}", id);
@@ -81,4 +91,14 @@ public class MatchDetailsController {
                 .build();
         return ResponseEntity.ok(apiResponse);
     }
-}
+
+    @GetMapping("/get-matches")
+    public ResponseEntity<ApiResponse<List<MatchDetailsResponse>>> getAuctionInCompleteData() {
+        List<MatchDetailsResponse> matchDetailsList = matchDetailsService.getAuctionInCompleteData();
+        log.info("Fetched all match details successfully");
+        ApiResponse<List<MatchDetailsResponse>> apiResponse = ApiResponse.<List<MatchDetailsResponse>>builder()
+                .data(matchDetailsList)
+                .message(ApiResponseMessages.MATCH_DETAILS_FETCHED_SUCCESSFULLY)
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }}

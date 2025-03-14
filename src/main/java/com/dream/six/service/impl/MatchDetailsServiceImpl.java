@@ -53,6 +53,8 @@ public class MatchDetailsServiceImpl implements MatchDetailsService {
             matchDetails.setMatchImage(imageBytes);
         }
 
+        matchDetails.setOptionCompleted("IN_COMPLETE");
+
         matchDetailsRepository.save(matchDetails);
 
         return matchDetails;
@@ -92,5 +94,31 @@ public class MatchDetailsServiceImpl implements MatchDetailsService {
     @Override
     public MatchDetails updateMatchDetails(UUID id, MatchDetailsRequest matchDetailsRequest) {
         return null;
+    }
+
+    @Override
+    public List<MatchDetailsResponse> getAuctionInCompleteData() {
+        List<MatchDetails> matchDetails = matchDetailsRepository.findAll();
+        List<MatchDetails> matchDetailsList = matchDetails.stream().filter(match -> match.getOptionCompleted() != null && !match.getOptionCompleted().equals("COMPLETED")).toList();
+        return matchDetailsList.stream().map(
+                modelMapper :: convertEntityToMatchDetailsResponse
+        ).toList();
+    }
+
+    @Override
+    public void updateMatchDone(UUID id) {
+        Optional<MatchDetails> optionalMatchDetails = matchDetailsRepository.findById(id);
+
+        if (optionalMatchDetails.isEmpty()){
+            throw new ResourceNotFoundException("no match details found with this id");
+        }
+
+        MatchDetails matchDetails = optionalMatchDetails.get();
+
+        matchDetails.setOptionCompleted("COMPLETED");
+
+        matchDetailsRepository.save(matchDetails);
+
+
     }
 }

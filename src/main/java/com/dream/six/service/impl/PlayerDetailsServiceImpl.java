@@ -120,6 +120,25 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
         teamPlayerDetailsRepository.save(newTeamPlayerDetails);
     }
 
+    @Override
+    public void updateUnsoldPlayer(UUID teamPlayerId, UUID playerId) {
+        TeamPlayerDetails teamPlayerDetails = teamPlayerDetailsRepository.findById(teamPlayerId)
+                .orElseThrow(() -> new ResourceNotFoundException("No team player details found for teamPlayerId: " + teamPlayerId));
+
+        // Validate if player exists in the team
+        TeamPlayerDetails.PlayersDto playerDto = teamPlayerDetails.getPlayersDtoMap().get(playerId);
+        if (playerDto == null) {
+            throw new ResourceNotFoundException("Player with ID " + playerId + " not found in the team.");
+        }
+
+        playerDto.setStatus("UN_SOLD");
+        teamPlayerDetails.getPlayersDtoMap().put(playerId, playerDto);
+
+        // Save updated team player details
+        teamPlayerDetailsRepository.save(teamPlayerDetails);
+
+    }
+
     @Transactional
     @Override
     public void updateSoldPrice(UUID teamPlayerId, UpdatePlayerSoldPriceRequest request) {
