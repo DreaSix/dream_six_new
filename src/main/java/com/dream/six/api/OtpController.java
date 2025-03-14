@@ -17,15 +17,15 @@ public class OtpController {
     }
 
     @PostMapping("/send")
-    public ResponseEntity<OtpResponse> sendOtp(@RequestParam String mobileNumber) {
-        OtpResponse response = otpService.sendOtp(mobileNumber);
+    public ResponseEntity<String> sendOtp(@RequestParam String mobileNumber) {
+        String response = otpService.sendOtp(mobileNumber);
         return ResponseEntity.ok(response);
 
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<OtpResponse> verifyOtp(@RequestParam String mobileNumber, @RequestParam String otp,@RequestParam String reqId) {
-        OtpResponse response = otpService.verifyOtp(otp, mobileNumber,reqId);
+    public ResponseEntity<String> verifyOtp( @RequestParam String otp,@RequestParam String reqId) {
+        String response = otpService.verifyOtp(otp,reqId);
         return ResponseEntity.ok(response);
     }
 }
