@@ -19,4 +19,8 @@ public interface MatchDetailsService {
     void deleteMatchDetails(UUID id);
 
     MatchDetails updateMatchDetails(UUID id, MatchDetailsRequest matchDetailsRequest);
+
+    List<MatchDetailsResponse> getAuctionInCompleteData();
+
+    void updateMatchDone(UUID id);
 }

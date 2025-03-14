@@ -69,6 +69,18 @@ public class PlayerDetailsController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @PutMapping("/{teamPlayerId}/updateUnSoldPlayer")
+    public ResponseEntity<ApiResponse> updateUnsoldPlayer(@PathVariable UUID teamPlayerId, @RequestParam UUID playerId){
+        playerDetailsService.updateUnsoldPlayer(teamPlayerId, playerId);
+
+
+        ApiResponse<String> apiResponse = ApiResponse.<String>builder()
+                .message("Player sold price updated successfully")
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
     @PutMapping("/{teamPlayerId}/updateSoldPrice")
     public ResponseEntity<ApiResponse<String>> updateSoldPrice(
             @PathVariable UUID teamPlayerId,

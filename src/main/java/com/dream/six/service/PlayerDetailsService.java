@@ -24,4 +24,6 @@ public interface PlayerDetailsService {
     TeamPlayerDetailsResponse getTeamPlayerDetailsById(UUID teamPlayerId);
 
     List<TeamPlayerDetailsResponse> getUserMatchBets(UUID userId);
+
+    void updateUnsoldPlayer(UUID teamPlayerId, UUID playerId);
 }

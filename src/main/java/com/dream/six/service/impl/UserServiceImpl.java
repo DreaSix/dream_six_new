@@ -204,7 +204,7 @@ public class UserServiceImpl implements UserService {
     public void changePassword(ChangePasswordRequestVO requestVO, UUID userId) {
         UserInfoEntity userInfo = userInfoRepository.findByIdAndIsDeletedFalse(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(String.format(ErrorMessageConstants.RESOURCE_WITH_ID_NOT_FOUND, ErrorMessageConstants.USER_NOT_FOUND, userId)));
-        if (userInfo.getPassword().equals(requestVO.getPassword())) {
+        if (!userInfo.getPassword().equals(requestVO.getPassword())) {
             throw new InvalidInputException(ErrorMessageConstants.INVALID_CURRENT_PASSWORD);
         }
         String password = requestVO.getNewPassword();
