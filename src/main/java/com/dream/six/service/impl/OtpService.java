@@ -28,7 +28,7 @@ public class OtpService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("Cookie", "HELLO_APP_HASH=c2t3U1dXQ1lWeTNvRXJ4T1BTWUFINkc0L0pGekhFcFNwd2lzTG9xdVk5OD0%3D; PHPSESSID=v23t6lc1124j41jnhkdbjoin56");
+//        headers.set("Cookie", "HELLO_APP_HASH=c2t3U1dXQ1lWeTNvRXJ4T1BTWUFINkc0L0pGekhFcFNwd2lzTG9xdVk5OD0%3D; PHPSESSID=v23t6lc1124j41jnhkdbjoin56");
 
         HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
         ResponseEntity<String> response = restTemplate.exchange(SEND_OTP_URL, HttpMethod.POST, requestEntity, String.class);
@@ -45,7 +45,7 @@ public class OtpService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("Cookie", "HELLO_APP_HASH=c2t3U1dXQ1lWeTNvRXJ4T1BTWUFINkc0L0pGekhFcFNwd2lzTG9xdVk5OD0%3D; PHPSESSID=v23t6lc1124j41jnhkdbjoin56");
+       // headers.set("Cookie", "HELLO_APP_HASH=c2t3U1dXQ1lWeTNvRXJ4T1BTWUFINkc0L0pGekhFcFNwd2lzTG9xdVk5OD0%3D; PHPSESSID=v23t6lc1124j41jnhkdbjoin56");
 
         HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
         ResponseEntity<String> response = restTemplate.exchange(VERIFY_OTP_URL, HttpMethod.POST, requestEntity, String.class);

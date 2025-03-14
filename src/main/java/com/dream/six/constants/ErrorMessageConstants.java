@@ -28,7 +28,7 @@ public final class ErrorMessageConstants {
 
     public static final String CLIENT_NOT_FOUND = "Client is not found";
 
-    public static final String USER_EMAIL_EXISTS = "User Email is already exists";
+    public static final String USER_EMAIL_EXISTS = "User phoneNumber is already exists";
     public static final String USER_NAME_EXISTS = "User Name is already exists";
 
     public static final String ROLE_NAME_EXISTS = "Role name is already exists";
