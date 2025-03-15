@@ -11,7 +11,6 @@ public class WinnerDetailsRequest {
     private String winnerName;
     private UUID matchId;
     private BigDecimal winnerAmount;
-    private UUID userId;
     private UUID playerId;
 
 
