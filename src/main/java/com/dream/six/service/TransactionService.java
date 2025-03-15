@@ -1,6 +1,7 @@
 package com.dream.six.service;
 
 
+import com.dream.six.entity.UserInfoEntity;
 import com.dream.six.enums.Status;
 import com.dream.six.enums.TransactionType;
 import com.dream.six.vo.ApiPageResponse;
@@ -26,12 +27,12 @@ public interface TransactionService {
 
     void deleteTransaction(UUID id);
 
-    TransactionResponseDTO updateApprovalStatus(UUID id, Status approvalStatus);
+    TransactionResponseDTO updateApprovalStatus(UUID id, Status approvalStatus, UserInfoEntity userInfoEntity);
 
     List<TransactionResponseDTO> getTransactionsByType(TransactionType transactionType);
 
     void createWithdrawRequest(CreateWithdrawRequestDTO requestDTO);
-    TransactionResponseDTO updateWithdrawTransaction(UpdateTransactionDTO updateTransactionDTO) throws IOException;
+    TransactionResponseDTO updateWithdrawTransaction(UpdateTransactionDTO updateTransactionDTO, UserInfoEntity userInfoEntity) throws IOException;
 
 
     }

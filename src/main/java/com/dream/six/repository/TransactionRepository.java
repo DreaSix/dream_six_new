@@ -1,6 +1,7 @@
 package com.dream.six.repository;
 
 import com.dream.six.entity.Transaction;
+import com.dream.six.entity.UserInfoEntity;
 import com.dream.six.enums.TransactionType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -14,4 +15,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
     List<Transaction> findByTransactionType(TransactionType transactionType);
 
     Page<Transaction> findAllByCreatedByUUID(PageRequest pageable, UUID userId);
+
+    List<Transaction> findByApprovedBy(UserInfoEntity userInfoEntity);
 }

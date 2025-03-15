@@ -36,17 +36,23 @@ public class WinnerDetailsServiceImpl implements WinnerDetailsService {
 
     @Override
     public void createWinner(WinnerDetailsRequest request) throws Exception {
-        Optional<MatchDetails> matchDetails = matchDetailsRepository.findById(request.getMatchId());
+        MatchDetails matchDetails = matchDetailsRepository.findById(request.getMatchId())
+                .orElseThrow(() -> new ResourceNotFoundException("No match found with this ID"));
         Optional<PlayerDetails> playerDetails = playerDetailsRepository.findById(request.getPlayerId());
+        List<TeamPlayerDetails> teamPlayerDetails = teamPlayerDetailsRepository.findByMatchDetails(matchDetails);
 
-        if (matchDetails.isEmpty()){
-            throw new Exception("Match is not found with id");
+        Optional<TeamPlayerDetails> teamPlayerDetails1 = teamPlayerDetails.stream()
+                .filter(team -> team.getPlayersDtoMap().containsKey(request.getPlayerId()))
+                .findFirst();
+
+        if (teamPlayerDetails1.isEmpty()){
+            throw new Exception("Player is not assigned to team");
+
         }
-
         if (playerDetails.isEmpty()){
             throw new Exception("Player is not found with id");
         }
-        WinnerDetails winnerDetails = buildWinnerDetails(request, matchDetails.get(), playerDetails.get());
+        WinnerDetails winnerDetails = buildWinnerDetails(request, matchDetails, playerDetails.get(), teamPlayerDetails1.get());
         winnerDetailsRepository.save(winnerDetails);
     }
 
@@ -74,11 +80,12 @@ public class WinnerDetailsServiceImpl implements WinnerDetailsService {
     }
 
 
-    private WinnerDetails buildWinnerDetails(WinnerDetailsRequest request, MatchDetails matchDetails, PlayerDetails playerDetails) throws IOException {
+    private WinnerDetails buildWinnerDetails(WinnerDetailsRequest request, MatchDetails matchDetails, PlayerDetails playerDetails, TeamPlayerDetails teamPlayerDetails) throws IOException {
         WinnerDetails winnerDetails = new WinnerDetails();
-            UserInfoEntity userInfo = userInfoRepository.findByIdAndIsDeletedFalse(request.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException(String.format(ErrorMessageConstants.RESOURCE_WITH_ID_NOT_FOUND, ErrorMessageConstants.USER_NOT_FOUND, request.getUserId())));
-        Optional<WalletEntity> optionalWalletEntity = walletRepository.findByCreatedByUUID(request.getUserId());
+        TeamPlayerDetails.PlayersDto playersDto = teamPlayerDetails.getPlayersDtoMap().get(playerDetails.getId());
+            UserInfoEntity userInfo = userInfoRepository.findByIdAndIsDeletedFalse(playersDto.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException(String.format(ErrorMessageConstants.RESOURCE_WITH_ID_NOT_FOUND, ErrorMessageConstants.USER_NOT_FOUND, playersDto.getUserId())));
+        Optional<WalletEntity> optionalWalletEntity = walletRepository.findByCreatedByUUID(playersDto.getUserId());
         if(optionalWalletEntity.isPresent()){
             WalletEntity walletEntity = optionalWalletEntity.get();
             walletEntity.setBalance(walletEntity.getBalance().add(request.getWinnerAmount()));
