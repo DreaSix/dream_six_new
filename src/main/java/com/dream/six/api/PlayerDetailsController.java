@@ -81,6 +81,17 @@ public class PlayerDetailsController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @PutMapping("/{teamPlayerId}/cancelSoldPlayer")
+    public ResponseEntity<ApiResponse> cancelSoldPlayer(@PathVariable UUID teamPlayerId, @RequestParam UUID playerId) {
+        playerDetailsService.cancelSoldPlayer(teamPlayerId, playerId);
+
+        ApiResponse<String> apiResponse = ApiResponse.<String>builder()
+                .message("Player sale canceled successfully, amount refunded to wallet")
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
     @PutMapping("/{teamPlayerId}/updateSoldPrice")
     public ResponseEntity<ApiResponse<String>> updateSoldPrice(
             @PathVariable UUID teamPlayerId,

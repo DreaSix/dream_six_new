@@ -105,6 +105,7 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
                             TeamPlayerDetails.PlayersDto dto = new TeamPlayerDetails.PlayersDto();
                             dto.setPlayerName(player.getPlayerName());
                             dto.setBasePrice(1000.0);
+//                            dto.setBasePrice(player.getBasePrice());
                             dto.setSoldPrice(0.0); // Default to zero
                             dto.setStatus("UNSOLD"); // Default status
                             return dto;
@@ -158,14 +159,14 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
         Optional<WalletEntity> optionalWalletEntity = walletEntities.stream().filter(wallet -> wallet.getCreatedByUUID().equals(request.getUserId())).findFirst();
 
         if (optionalWalletEntity.isEmpty()){
-            throw new RuntimeException("No wallet found for userId: " + request.getUserId());
+            throw new ResourceNotFoundException("No wallet found for userId: " + request.getUserId());
         }
 
         WalletEntity walletEntity = optionalWalletEntity.get();
 
         BigDecimal soldPrice = BigDecimal.valueOf(request.getSoldPrice());
         if (walletEntity.getBalance().compareTo(soldPrice) < 0) {
-            throw new RuntimeException("Insufficient balance. Available: " + walletEntity.getBalance() + ", Required: " + soldPrice);
+            throw new ResourceNotFoundException("Insufficient balance. Available: " + walletEntity.getBalance() + ", Required: " + soldPrice);
         }
 
         // Deduct the sold price from the wallet balance and update net exposure
@@ -184,6 +185,52 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
         teamPlayerDetailsRepository.save(teamPlayerDetails);
     }
 
+    @Transactional
+    @Override
+    public void cancelSoldPlayer(UUID teamPlayerId, UUID playerId) {
+        // Fetch team player details
+        TeamPlayerDetails teamPlayerDetails = teamPlayerDetailsRepository.findById(teamPlayerId)
+                .orElseThrow(() -> new ResourceNotFoundException("No team player details found for teamPlayerId: " + teamPlayerId));
+
+        // Validate if player exists in the team
+        TeamPlayerDetails.PlayersDto playerDto = teamPlayerDetails.getPlayersDtoMap().get(playerId);
+        if (playerDto == null || !"SOLD".equals(playerDto.getStatus())) {
+            throw new ResourceNotFoundException("Player with ID " + playerId + " is not sold or does not exist.");
+        }
+
+        List<WalletEntity> walletEntities = walletRepository.findAll();
+
+        // Fetch user wallet
+        Optional<WalletEntity> optionalWalletEntity = walletEntities.stream()
+                .filter(wallet -> wallet.getCreatedByUUID().equals(playerDto.getUserId()))
+                .findFirst();
+
+        if (optionalWalletEntity.isEmpty()) {
+            throw new ResourceNotFoundException("No wallet found for userId: " + playerDto.getUserId());
+        }
+
+        WalletEntity walletEntity = optionalWalletEntity.get();
+
+        BigDecimal soldPrice = BigDecimal.valueOf(playerDto.getSoldPrice());
+
+        // Refund the sold price back to wallet and adjust net exposure
+        walletEntity.setBalance(walletEntity.getBalance().add(soldPrice));
+        walletEntity.setNetExposure(walletEntity.getNetExposure().subtract(soldPrice));
+        walletRepository.save(walletEntity);
+
+        // Mark player as "CANCELLED"
+        playerDto.setStatus("CANCELLED");
+        playerDto.setSoldPrice(0.0);
+        playerDto.setUserId(null);
+        playerDto.setSoldDate(null);
+
+        teamPlayerDetails.getPlayersDtoMap().put(playerId, playerDto);
+
+        // Save updated team player details
+        teamPlayerDetailsRepository.save(teamPlayerDetails);
+    }
+
+
     @Override
     public List<TeamPlayerDetailsResponse> getMatchTeamPlayers(UUID id) {
         // Fetch match details
@@ -195,8 +242,7 @@ public class PlayerDetailsServiceImpl implements PlayerDetailsService {
         List<BidEntity> bidDetails = bidRepository.findAll();
         List<PlayerDetails> playerDetailsList = playerDetailsRepository.findAll();
         return playerMatchDetails.stream().map(details -> {
-            TeamPlayerDetailsResponse teamPlayerDetailsResponse = modelMapper.convertToTeamPlayerDetailsResponse(details, playerDetailsList, bidDetails);
-            return teamPlayerDetailsResponse;
+            return modelMapper.convertToTeamPlayerDetailsResponse(details, playerDetailsList, bidDetails);
         }).toList();
 
             }
