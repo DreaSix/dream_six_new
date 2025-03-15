@@ -2,33 +2,39 @@ package com.dream.six.api;
 
 import com.dream.six.constants.ApiResponseMessages;
 import com.dream.six.enums.EntityFlag;
+import com.dream.six.service.PlayerDetailsService;
 import com.dream.six.service.impl.MessageService;
 import com.dream.six.vo.ApiResponse;
 import com.dream.six.vo.response.BidResponseDTO;
+import com.dream.six.vo.response.TeamPlayerDetailsResponse;
 import com.dream.six.vo.response.TransactionResponseDTO;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/chat")
 @Slf4j
+@RequiredArgsConstructor
 public class ChatController {
 
     private final MessageService messageService;
     private final SimpMessagingTemplate simpMessagingTemplate;
+    private final PlayerDetailsService playerDetailsService;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public ChatController(MessageService messageService, SimpMessagingTemplate simpMessagingTemplate) {
-        this.messageService = messageService;
-        this.simpMessagingTemplate = simpMessagingTemplate;
-    }
+
+
 
     @PostMapping("/createBid")
     public BidResponseDTO createBid(@RequestParam UUID matchId, @RequestParam UUID playerId ,@RequestParam EntityFlag flag) throws Exception {
@@ -65,6 +71,16 @@ public class ChatController {
 //        simpMessagingTemplate.convertAndSend("/topic/public", response);
     }
 
+    @MessageMapping("/teamPlayers/{matchId}")
+    public void sendMatchTeamPlayers(@DestinationVariable UUID matchId) {
+        try {
+            List<TeamPlayerDetailsResponse> teamPlayers = playerDetailsService.getMatchTeamPlayers(matchId);
+            messagingTemplate.convertAndSend("/topic/teamPlayers/" + matchId, teamPlayers);
+        } catch (Exception e) {
+            log.error("Error fetching match team players: {}", e.getMessage());
+            messagingTemplate.convertAndSend("/topic/teamPlayers/" + matchId, "Error fetching match team players.");
+        }
+    }
     @Setter
     @Getter
     public static class BidMessageRequest {
