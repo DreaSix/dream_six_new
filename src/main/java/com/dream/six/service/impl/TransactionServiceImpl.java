@@ -94,6 +94,7 @@ public class TransactionServiceImpl implements TransactionService {
                         transactionResponseDTO.setAccountNumber(item.getWithdrawBank().getAccountNumber());
                         transactionResponseDTO.setIfscCode(item.getWithdrawBank().getIfscCode());
                     }
+                    transactionResponseDTO.setUserResponseVO(mapper.convertUserInfoEntityToUserResponse(item.getApprovedBy()));
                     if (item.getImage() != null){
                         byte[] imageBytes = item.getImage();
 
@@ -118,7 +119,11 @@ public class TransactionServiceImpl implements TransactionService {
         // Convert entities to DTOs
         var responseVOs = transactionPage.getContent()
                 .stream()
-                .map(mapper::convertEntityToTransactionResponseDTO)
+                .map(transaction -> {
+                    TransactionResponseDTO transactionResponseDTO = mapper.convertEntityToTransactionResponseDTO(transaction);
+                    transactionResponseDTO.setUserResponseVO(mapper.convertUserInfoEntityToUserResponse(transaction.getApprovedBy()));
+                    return transactionResponseDTO;
+                })
                 .toList();
 
         log.info("Converted {} transactions to response DTOs", responseVOs.size());
@@ -163,13 +168,14 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public TransactionResponseDTO updateApprovalStatus(UUID id, Status approvalStatus) {
+    public TransactionResponseDTO updateApprovalStatus(UUID id, Status approvalStatus, UserInfoEntity userInfoEntity) {
         log.info("Updating approval status for transaction ID: {}", id);
 
         Transaction transaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Transaction not found for ID: " + id));
 
         transaction.setApprovalStatus(approvalStatus);
+        transaction.setApprovedBy(userInfoEntity);
 
         Transaction updatedTransaction = transactionRepository.save(transaction);
 
@@ -235,18 +241,12 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public TransactionResponseDTO updateWithdrawTransaction(UpdateTransactionDTO updateTransactionDTO) throws IOException {
+    public TransactionResponseDTO updateWithdrawTransaction(UpdateTransactionDTO updateTransactionDTO, UserInfoEntity userInfoEntity) throws IOException {
         Transaction transaction = transactionRepository.findById(updateTransactionDTO.getTransactionId())
                 .orElseThrow(() -> new EntityNotFoundException("Transaction not found"));
 
         transaction.setApprovalStatus(updateTransactionDTO.getApprovalStatus());
-
-        UUID userUUID;
-        try {
-            userUUID = UUID.fromString(MDC.get(Constants.USER_UUID_ATTRIBUTE));
-        } catch (IllegalArgumentException | NullPointerException e) {
-            throw new RuntimeException("Invalid UUID format in MDC: " + MDC.get(Constants.USER_UUID_ATTRIBUTE), e);
-        }
+        transaction.setApprovedBy(userInfoEntity);
 
         WalletEntity walletEntity = walletRepository.findByCreatedByUUID(transaction.getCreatedByUUID())
                 .orElseThrow(() -> new RuntimeException("Wallet not found for user UUID: " + transaction.getCreatedByUUID()));
@@ -256,13 +256,6 @@ public class TransactionServiceImpl implements TransactionService {
             walletEntity.setBalance(newBalance);
         }
 
-//        WalletEntity walletEntity = walletRepository.findByCreatedByUUID(userUUID)
-//                .orElseThrow(() -> new RuntimeException("Wallet not found for user UUID: " + userUUID));
-//        BigDecimal newBalance = walletEntity.getBalance().subtract(BigDecimal.valueOf(transaction.getAmount()));
-//        if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
-//            throw new RuntimeException("Insufficient balance");
-//        }
-//        walletEntity.setBalance(newBalance);
         walletRepository.save(walletEntity);
         Transaction updatedTransaction = transactionRepository.save(transaction);
 

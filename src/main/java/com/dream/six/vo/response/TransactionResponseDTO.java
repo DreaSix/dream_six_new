@@ -21,5 +21,6 @@ public class TransactionResponseDTO {
     private String accountNumber;
     private String accountHolderName;
     private String ifscCode;
+    private UserResponseVO userResponseVO;
 
 }

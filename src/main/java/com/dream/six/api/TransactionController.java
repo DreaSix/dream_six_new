@@ -137,7 +137,10 @@ public class TransactionController {
             throw new IllegalArgumentException("Invalid approval status: " + approvalStatus);
         }
 
-        TransactionResponseDTO response = transactionService.updateApprovalStatus(id, statusEnum);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserInfoEntity userInfoEntity = (UserInfoEntity) authentication.getPrincipal();
+
+        TransactionResponseDTO response = transactionService.updateApprovalStatus(id, statusEnum, userInfoEntity);
         log.info("Approval status updated successfully for transaction ID: {}", id);
 
         ApiResponse<TransactionResponseDTO> apiResponse = ApiResponse.<TransactionResponseDTO>builder()
@@ -185,7 +188,10 @@ public class TransactionController {
             @RequestBody UpdateTransactionDTO updateTransactionDTO) throws IOException {
         log.info("Updating transaction with ID: {}", updateTransactionDTO.getTransactionId());
 
-        TransactionResponseDTO updatedTransaction = transactionService.updateWithdrawTransaction(updateTransactionDTO);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserInfoEntity userInfoEntity = (UserInfoEntity) authentication.getPrincipal();
+
+        TransactionResponseDTO updatedTransaction = transactionService.updateWithdrawTransaction(updateTransactionDTO, userInfoEntity);
         log.info("Transaction updated successfully with ID: {}", updatedTransaction.getId());
 
         ApiResponse<TransactionResponseDTO> apiResponse = ApiResponse.<TransactionResponseDTO>builder()
