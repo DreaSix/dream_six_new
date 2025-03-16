@@ -63,15 +63,12 @@ public class WinnerDetailsServiceImpl implements WinnerDetailsService {
 
         List<PlayerDetails> playerDetails = playerDetailsRepository.findAll();
 
-        // Convert LocalDate to Timestamp for database query
         Timestamp startOfYesterday = Timestamp.valueOf(yesterday.atStartOfDay());
         Timestamp endOfToday = Timestamp.valueOf(today.atStartOfDay().plusDays(1).minusSeconds(1));
 
-        // Fetch winner details within the date range
         List<WinnerDetails> winnerDetailsList = winnerDetailsRepository.findByCreatedAtBetween(startOfYesterday, endOfToday);
 
         List<BidEntity> bidEntities = bidRepository.findAll();
-        // Map WinnerDetails to WinnerDetailsResponse
         return winnerDetailsList.stream()
                 .map(winnerDetails -> {
                     return modelMapper.convertToWinnerDetailsResponse(winnerDetails, playerDetails, bidEntities);
