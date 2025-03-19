@@ -179,14 +179,16 @@ public class TransactionServiceImpl implements TransactionService {
 
         Transaction updatedTransaction = transactionRepository.save(transaction);
 
-        WalletEntity walletEntity = walletRepository.findByCreatedByUUID(transaction.getCreatedByUUID())
-                .orElseThrow(() -> new RuntimeException("Wallet not found for user UUID: " + transaction.getCreatedByUUID()));
-        BigDecimal newBalance = walletEntity.getBalance().add(BigDecimal.valueOf(transaction.getAmount()));
-        if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new RuntimeException("Insufficient balance");
+        if (approvalStatus.equals(Status.APPROVED)){
+            WalletEntity walletEntity = walletRepository.findByCreatedByUUID(transaction.getCreatedByUUID())
+                    .orElseThrow(() -> new RuntimeException("Wallet not found for user UUID: " + transaction.getCreatedByUUID()));
+            BigDecimal newBalance = walletEntity.getBalance().add(BigDecimal.valueOf(transaction.getAmount()));
+            if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
+                throw new RuntimeException("Insufficient balance");
+            }
+            walletEntity.setBalance(newBalance);
+            walletRepository.save(walletEntity);
         }
-        walletEntity.setBalance(newBalance);
-        walletRepository.save(walletEntity);
         return mapper.convertEntityToTransactionResponseDTO(updatedTransaction);
     }
 
