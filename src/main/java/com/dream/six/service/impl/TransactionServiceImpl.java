@@ -6,6 +6,7 @@ import com.dream.six.constants.Constants;
 import com.dream.six.entity.*;
 import com.dream.six.enums.Status;
 import com.dream.six.enums.TransactionType;
+import com.dream.six.exception.ResourceNotFoundException;
 import com.dream.six.repository.*;
 import com.dream.six.service.TransactionService;
 import com.dream.six.vo.ApiPageResponse;
@@ -44,7 +45,7 @@ public class TransactionServiceImpl implements TransactionService {
         log.info("Creating transaction: {}", requestDTO);
 
         Payment payment = paymentRepository.findById(requestDTO.getPaymentId())
-                .orElseThrow(() -> new RuntimeException("Payment not found for ID: " + requestDTO.getPaymentId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found for ID: " + requestDTO.getPaymentId()));
 
         Transaction transaction = new Transaction();
         transaction.setAmount(requestDTO.getAmount());
@@ -74,7 +75,7 @@ public class TransactionServiceImpl implements TransactionService {
         log.info("Fetching transaction with ID: {}", id);
 
         Transaction transaction = transactionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Transaction not found for ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found for ID: " + id));
 
         return mapper.convertEntityToTransactionResponseDTO(transaction);
     }
@@ -161,7 +162,7 @@ public class TransactionServiceImpl implements TransactionService {
         log.info("Deleting transaction with ID: {}", id);
 
         if (!transactionRepository.existsById(id)) {
-            throw new RuntimeException("Transaction not found for ID: " + id);
+            throw new ResourceNotFoundException("Transaction not found for ID: " + id);
         }
 
         transactionRepository.deleteById(id);
@@ -181,10 +182,10 @@ public class TransactionServiceImpl implements TransactionService {
 
         if (approvalStatus.equals(Status.APPROVED)){
             WalletEntity walletEntity = walletRepository.findByCreatedByUUID(transaction.getCreatedByUUID())
-                    .orElseThrow(() -> new RuntimeException("Wallet not found for user UUID: " + transaction.getCreatedByUUID()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Wallet not found for user UUID: " + transaction.getCreatedByUUID()));
             BigDecimal newBalance = walletEntity.getBalance().add(BigDecimal.valueOf(transaction.getAmount()));
             if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
-                throw new RuntimeException("Insufficient balance");
+                throw new ResourceNotFoundException("Insufficient balance");
             }
             walletEntity.setBalance(newBalance);
             walletRepository.save(walletEntity);
