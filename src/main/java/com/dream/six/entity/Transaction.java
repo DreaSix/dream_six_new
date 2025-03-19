@@ -23,7 +23,6 @@ public class Transaction extends BaseEntity{
     @Column(name = "AMOUNT", nullable = false)
     private Double amount;
 
-    @Lob
     @Column(name = "TRANSACTION_IMAGE")
     private byte[] image;
 

@@ -140,5 +140,16 @@ public class UserAPI {
         return ResponseEntity.ok("Password changed successfully.");
     }
 
+    @PutMapping("/forget-password")
+    public ResponseEntity<String> forgetPassword( @RequestParam String newPassword) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserInfoEntity userInfoEntity = (UserInfoEntity) authentication.getPrincipal();
+        log.info("Received request to forget password for user with ID: {}", userInfoEntity.getId());
+        userService.forgetPassword(newPassword, userInfoEntity.getId());
+        log.info("Password changed successfully for user with ID: {}", userInfoEntity.getId());
+        return ResponseEntity.ok("Password changed successfully.");
+    }
+
+
 
 }

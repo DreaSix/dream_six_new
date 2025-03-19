@@ -1,5 +1,6 @@
 package com.dream.six.api;
 
+import com.dream.six.config.LogExecutionTime;
 import com.dream.six.service.PlayerDetailsService;
 import com.dream.six.vo.ApiResponse;
 import com.dream.six.vo.request.PlayerDetailsRequest;
@@ -9,12 +10,15 @@ import com.dream.six.vo.response.PlayerDetailsResponse;
 import com.dream.six.vo.response.TeamPlayerDetailsResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @Slf4j
 @RestController

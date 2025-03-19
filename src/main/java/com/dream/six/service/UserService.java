@@ -23,6 +23,8 @@ public interface UserService {
     void deleteUser(UUID userId);
     void changePassword(ChangePasswordRequestVO requestVO, UUID userId);
 
+    void forgetPassword(String newPassword, UUID userId);
+
     List<UserResponseVO> findByRoleName(String roleName);
 
     Map<String, List<UserResponseVO>> findByRoleNames(List<String> roleNames);

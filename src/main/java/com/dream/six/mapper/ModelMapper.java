@@ -56,13 +56,13 @@ public class ModelMapper {
 
         TeamPlayerDetailsResponse response = new TeamPlayerDetailsResponse();
 
-        response.setId(teamPlayerDetails.getId()); // Use TeamPlayerDetails ID
-        response.setTeamName(teamPlayerDetails.getTeamName());
+            response.setId(teamPlayerDetails.getId()); // Use TeamPlayerDetails ID
+            response.setTeamName(teamPlayerDetails.getTeamName());
 
-        // Convert MatchDetails entity to response DTO
-        response.setMatchDetailsResponse(
-                this.convertEntityToMatchDetailsResponse(teamPlayerDetails.getMatchDetails())
-        );
+            // Convert MatchDetails entity to response DTO
+            response.setMatchDetailsResponse(
+                    this.convertEntityToMatchDetailsResponse(teamPlayerDetails.getMatchDetails())
+            );
 
         // Convert PlayersDtoMap properly with player details check & bidEntity
         response.setPlayersDtoMap(teamPlayerDetails.getPlayersDtoMap().entrySet().stream()

@@ -24,7 +24,6 @@ public class PlayerDetails extends BaseEntity{
     @Column(name = "COUNTRY_NAME")
     private String countryName;
 
-    @Lob
     @Column(name = "PLAYER_IMAGE")
     private byte[] playerImage;
 

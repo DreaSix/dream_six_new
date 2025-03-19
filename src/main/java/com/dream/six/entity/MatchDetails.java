@@ -18,7 +18,6 @@ public class MatchDetails extends BaseEntity {
     @Column(name = "ID")
     private UUID id;
 
-    @Lob
     @Column(name = "MATCH_IMAGE")
     private byte[] matchImage;
 

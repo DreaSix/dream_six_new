@@ -215,6 +215,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void forgetPassword(String newPassword, UUID userId) {
+        UserInfoEntity userInfo = userInfoRepository.findByIdAndIsDeletedFalse(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(String.format(ErrorMessageConstants.RESOURCE_WITH_ID_NOT_FOUND, ErrorMessageConstants.USER_NOT_FOUND, userId)));
+        userInfo.setPassword(newPassword);
+        String newHashedPassword =PasswordUtils.hashPassword(newPassword);
+        userInfo.setEncodedPassword(newHashedPassword);
+        userInfoRepository.save(userInfo);
+    }
+
+    @Override
     public List<UserResponseVO> findByRoleName(String roleName) {
         List<UserInfoEntity> userInfoEntities = userInfoRepository.findByRoles_NameOrderByCreatedAtDesc(roleName);
 

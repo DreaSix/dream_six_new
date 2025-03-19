@@ -179,7 +179,6 @@ public class MessageService {
         BidEntity entity = bidRepository.findById(bidId).orElseThrow(
                 () -> new RuntimeException("No bid found with bidId: " + bidId));
 
-        List<MessageDetails> messageDetail = messageRepository.findAll();
 
 
         List<MessageDetails> messageDetailsList = messageRepository.findByBidId(entity.getId());
