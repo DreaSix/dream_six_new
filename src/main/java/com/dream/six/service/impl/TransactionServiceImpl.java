@@ -85,11 +85,14 @@ public class TransactionServiceImpl implements TransactionService {
         log.info("Fetching all transactions");
 
         List<Transaction> transactions = transactionRepository.findAll();
+        List<UserInfoEntity> userInfoEntities = userInfoRepository.findAll();
 
         return transactions.stream()
                 .map(item -> {
                     TransactionResponseDTO transactionResponseDTO = mapper.convertEntityToTransactionResponseDTO(item);
+                    UserInfoEntity userInfoEntity = userInfoEntities.stream().filter(user -> user.getUsername().equals(item.getCreatedBy())).findFirst().get();
                     transactionResponseDTO.setUserName(item.getCreatedBy());
+                    transactionResponseDTO.setName(userInfoEntity.getName());
                     if (item.getWithdrawBank() != null){
                         transactionResponseDTO.setAccountHolderName(item.getWithdrawBank().getAccountHolderName());
                         transactionResponseDTO.setAccountNumber(item.getWithdrawBank().getAccountNumber());

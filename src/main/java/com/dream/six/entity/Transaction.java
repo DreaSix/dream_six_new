@@ -41,11 +41,11 @@ public class Transaction extends BaseEntity{
     @Column(name = "APPROVAL_STATUS", nullable = false)
     private Status approvalStatus;
 
-    @OneToMany(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "WITHDRAW_BANK_ID")
     private WithdrawBankEntity withdrawBank;
 
-    @OneToMany(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "USER_ID")
     private UserInfoEntity approvedBy;
 

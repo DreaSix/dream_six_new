@@ -2,6 +2,8 @@ package com.dream.six.api;
 
 import com.dream.six.constants.ApiResponseMessages;
 import com.dream.six.constants.Constants;
+import com.dream.six.exception.ResourceNotFoundException;
+import com.dream.six.repository.UserInfoRepository;
 import com.dream.six.service.UserService;
 import com.dream.six.vo.ApiPageResponse;
 import com.dream.six.vo.ApiResponse;
@@ -10,10 +12,9 @@ import com.dream.six.vo.request.UserRequestVO;
 import com.dream.six.vo.response.UserResponseVO;
 import com.dream.six.entity.UserInfoEntity;
 import jakarta.validation.Valid;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+
+import java.util.*;
+
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,10 +30,12 @@ import org.springframework.web.bind.annotation.*;
 public class UserAPI {
 
     private final UserService userService;
+    private final UserInfoRepository userInfoRepository;
 
     @Autowired
-    public UserAPI(UserService userService) {
+    public UserAPI(UserService userService, UserInfoRepository userInfoRepository) {
         this.userService = userService;
+        this.userInfoRepository = userInfoRepository;
     }
 
     @GetMapping("/info")
@@ -141,14 +144,21 @@ public class UserAPI {
     }
 
     @PutMapping("/forget-password")
-    public ResponseEntity<String> forgetPassword( @RequestParam String newPassword) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserInfoEntity userInfoEntity = (UserInfoEntity) authentication.getPrincipal();
-        log.info("Received request to forget password for user with ID: {}", userInfoEntity.getId());
+    public ResponseEntity<String> forgetPassword(@RequestParam String userName, @RequestParam String newPassword) {
+        log.info("Received request to forget password for user: {}", userName);
+
+        UserInfoEntity userInfoEntity = userInfoRepository.findByUserNameAndIsDeletedFalse(userName)
+                .orElseThrow(() -> {
+                    log.warn("User not found with username: {}", userName);
+                    return new ResourceNotFoundException("User not found with username: " + userName);
+                });
+
         userService.forgetPassword(newPassword, userInfoEntity.getId());
         log.info("Password changed successfully for user with ID: {}", userInfoEntity.getId());
+
         return ResponseEntity.ok("Password changed successfully.");
     }
+
 
 
 

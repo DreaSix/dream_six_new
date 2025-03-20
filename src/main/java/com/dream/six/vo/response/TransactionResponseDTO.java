@@ -16,6 +16,7 @@ public class TransactionResponseDTO {
     private TransactionType transactionType;
     private Status approvalStatus;
     private String userName;
+    private String name;
     private String transactionImage;
     private Timestamp createdAt;
     private String accountNumber;
