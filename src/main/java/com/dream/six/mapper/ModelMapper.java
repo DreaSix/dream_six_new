@@ -78,9 +78,8 @@ public class ModelMapper {
                                     .findFirst()
                                     .orElse(null);
 
-                            // Find matching bid entity by playerId
                             BidEntity matchingBid = bidEntities.stream()
-                                    .filter(bid -> bid.getPlayerId().equals(playerId))
+                                    .filter(bid -> bid.getPlayerId().equals(playerId) && bid.getMatchId().equals(teamPlayerDetails.getMatchDetails().getId()))
                                     .findFirst()
                                     .orElse(null);
 
