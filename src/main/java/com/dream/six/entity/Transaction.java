@@ -45,8 +45,6 @@ public class Transaction extends BaseEntity{
     @JoinColumn(name = "WITHDRAW_BANK_ID")
     private WithdrawBankEntity withdrawBank;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "USER_ID")
-    private UserInfoEntity approvedBy;
+    private UUID approvedBy;
 
 }

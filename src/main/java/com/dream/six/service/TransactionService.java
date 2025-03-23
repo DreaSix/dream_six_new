@@ -27,7 +27,7 @@ public interface TransactionService {
 
     void deleteTransaction(UUID id);
 
-    TransactionResponseDTO updateApprovalStatus(UUID id, Status approvalStatus, UserInfoEntity userInfoEntity);
+    TransactionResponseDTO updateApprovalStatus(UUID id, Status approvalStatus);
 
     List<TransactionResponseDTO> getTransactionsByType(TransactionType transactionType);
 

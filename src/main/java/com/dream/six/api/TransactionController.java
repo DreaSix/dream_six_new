@@ -137,10 +137,8 @@ public class TransactionController {
             throw new IllegalArgumentException("Invalid approval status: " + approvalStatus);
         }
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserInfoEntity userInfoEntity = (UserInfoEntity) authentication.getPrincipal();
 
-        TransactionResponseDTO response = transactionService.updateApprovalStatus(id, statusEnum, userInfoEntity);
+        TransactionResponseDTO response = transactionService.updateApprovalStatus(id, statusEnum);
         log.info("Approval status updated successfully for transaction ID: {}", id);
 
         ApiResponse<TransactionResponseDTO> apiResponse = ApiResponse.<TransactionResponseDTO>builder()
