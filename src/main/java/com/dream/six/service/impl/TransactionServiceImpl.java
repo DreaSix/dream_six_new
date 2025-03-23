@@ -98,7 +98,8 @@ public class TransactionServiceImpl implements TransactionService {
                         transactionResponseDTO.setAccountNumber(item.getWithdrawBank().getAccountNumber());
                         transactionResponseDTO.setIfscCode(item.getWithdrawBank().getIfscCode());
                     }
-                    transactionResponseDTO.setUserResponseVO(mapper.convertUserInfoEntityToUserResponse(item.getApprovedBy()));
+                    UserInfoEntity userInfo = userInfoRepository.findByIdAndIsDeletedFalse(item.getApprovedBy()).orElseThrow();
+                    transactionResponseDTO.setUserResponseVO(mapper.convertUserInfoEntityToUserResponse(userInfo));
                     if (item.getImage() != null){
                         byte[] imageBytes = item.getImage();
 
@@ -125,7 +126,8 @@ public class TransactionServiceImpl implements TransactionService {
                 .stream()
                 .map(transaction -> {
                     TransactionResponseDTO transactionResponseDTO = mapper.convertEntityToTransactionResponseDTO(transaction);
-                    transactionResponseDTO.setUserResponseVO(mapper.convertUserInfoEntityToUserResponse(transaction.getApprovedBy()));
+                    UserInfoEntity userInfo = userInfoRepository.findByIdAndIsDeletedFalse(transaction.getApprovedBy()).orElseThrow();
+                    transactionResponseDTO.setUserResponseVO(mapper.convertUserInfoEntityToUserResponse(userInfo));
                     return transactionResponseDTO;
                 })
                 .toList();
@@ -172,14 +174,15 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public TransactionResponseDTO updateApprovalStatus(UUID id, Status approvalStatus, UserInfoEntity userInfoEntity) {
+    public TransactionResponseDTO updateApprovalStatus(UUID id, Status approvalStatus) {
         log.info("Updating approval status for transaction ID: {}", id);
 
         Transaction transaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Transaction not found for ID: " + id));
 
         transaction.setApprovalStatus(approvalStatus);
-        transaction.setApprovedBy(userInfoEntity);
+        String userId = MDC.get(Constants.USER_UUID_ATTRIBUTE);
+        transaction.setApprovedBy(UUID.fromString(userId));
 
         Transaction updatedTransaction = transactionRepository.save(transaction);
 
@@ -232,14 +235,14 @@ public class TransactionServiceImpl implements TransactionService {
         try {
             userUUID = UUID.fromString(MDC.get(Constants.USER_UUID_ATTRIBUTE));
         } catch (IllegalArgumentException | NullPointerException e) {
-            throw new RuntimeException("Invalid UUID format in MDC: " + MDC.get(Constants.USER_UUID_ATTRIBUTE), e);
+            throw new ResourceNotFoundException("Invalid UUID format in MDC: " + MDC.get(Constants.USER_UUID_ATTRIBUTE));
         }
 
         WalletEntity walletEntity = walletRepository.findByCreatedByUUID(userUUID)
-                .orElseThrow(() -> new RuntimeException("Wallet not found for user UUID: " + userUUID));
+                .orElseThrow(() -> new ResourceNotFoundException("Wallet not found for user UUID: " + userUUID));
         BigDecimal newBalance = walletEntity.getBalance().subtract(BigDecimal.valueOf(transaction.getAmount()));
         if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new RuntimeException("Insufficient balance");
+            throw new ResourceNotFoundException("Insufficient balance");
         }
         walletEntity.setBalance(newBalance);
         walletRepository.save(walletEntity);
@@ -252,10 +255,12 @@ public class TransactionServiceImpl implements TransactionService {
                 .orElseThrow(() -> new EntityNotFoundException("Transaction not found"));
 
         transaction.setApprovalStatus(updateTransactionDTO.getApprovalStatus());
-        transaction.setApprovedBy(userInfoEntity);
+        String userUUIDString = MDC.get(Constants.USER_UUID_ATTRIBUTE);
+
+        transaction.setApprovedBy(UUID.fromString(userUUIDString));
 
         WalletEntity walletEntity = walletRepository.findByCreatedByUUID(transaction.getCreatedByUUID())
-                .orElseThrow(() -> new RuntimeException("Wallet not found for user UUID: " + transaction.getCreatedByUUID()));
+                .orElseThrow(() -> new ResourceNotFoundException("Wallet not found for user UUID: " + transaction.getCreatedByUUID()));
 
         if (!"APPROVED".equalsIgnoreCase(String.valueOf(updateTransactionDTO.getApprovalStatus()))) {
             BigDecimal newBalance = walletEntity.getBalance().add(BigDecimal.valueOf(transaction.getAmount()));
